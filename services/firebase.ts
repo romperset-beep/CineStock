@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { initializeFirestore, memoryLocalCache } from 'firebase/firestore';
+import { getFirestore, setLogLevel } from 'firebase/firestore';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -12,7 +12,9 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-// Disable persistence (memory only) to avoid IndexedDB blocks
-export const db = initializeFirestore(app, {
-    localCache: memoryLocalCache()
-});
+
+// Enable debug logs to see why it hangs
+setLogLevel('debug');
+
+// Standard init (persistence is disabled by default in some environments, but let's stick to standard)
+export const db = getFirestore(app);
