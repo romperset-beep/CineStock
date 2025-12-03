@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { initializeFirestore } from 'firebase/firestore';
+import { initializeFirestore, memoryLocalCache } from 'firebase/firestore';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -12,6 +12,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+// Disable persistence (memory only) to avoid IndexedDB blocks
 export const db = initializeFirestore(app, {
-    experimentalForceLongPolling: true,
+    localCache: memoryLocalCache()
 });
