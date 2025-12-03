@@ -108,39 +108,52 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [debugStatus, setDebugStatus] = useState<string>("");
 
   const testConnection = async () => {
-    setDebugStatus("Test en cours...");
+    setDebugStatus("1. Test REST API en cours...");
+
+    // 1. Test REST API immediately (Pure HTTP)
+    try {
+      const projectId = "studio-4995281481-cbcdb";
+      const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/_debug_connection`;
+      const response = await fetch(url);
+
+      if (!response.ok && response.status !== 404) { // 404 is fine (collection might be empty), 403/400 is bad
+        const text = await response.text();
+        setDebugStatus(`ÉCHEC REST API ❌ (${response.status}): ${text}`);
+        setError(`REST Error: ${text}`);
+        return;
+      }
+      setDebugStatus("REST API OK ✅. 2. Test SDK (Timeout 5s)...");
+    } catch (restErr: any) {
+      setDebugStatus(`ÉCHEC RÉSEAU REST ❌: ${restErr.message}`);
+      return;
+    }
+
+    // 2. Test SDK with Timeout
     try {
       const { enableNetwork, addDoc, collection } = await import('firebase/firestore');
       await enableNetwork(db);
-      setDebugStatus("Réseau activé. Tentative d'écriture...");
 
       const testRef = collection(db, '_debug_connection');
-      await addDoc(testRef, {
-        timestamp: new Date(),
-        user: user?.email || 'anonymous',
-        device: navigator.userAgent
-      });
 
-      setDebugStatus("SUCCÈS SDK ! Écriture réussie sur le serveur.");
+      // Race between addDoc and a 5s timeout
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout (5s) - Le SDK bloque")), 5000)
+      );
+
+      await Promise.race([
+        addDoc(testRef, {
+          timestamp: new Date(),
+          user: user?.email || 'anonymous',
+          device: navigator.userAgent
+        }),
+        timeoutPromise
+      ]);
+
+      setDebugStatus("SUCCÈS TOTAL (REST + SDK) ! 🎉");
     } catch (err: any) {
       console.error("SDK Error:", err);
-      setDebugStatus(`ÉCHEC SDK : ${err.message}. Tentative REST API...`);
-
-      // Fallback: Test REST API directly
-      try {
-        const projectId = "studio-4995281481-cbcdb";
-        const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/_debug_connection`;
-        const response = await fetch(url);
-        if (response.ok) {
-          setDebugStatus(`ÉCHEC SDK mais SUCCÈS REST API (${response.status}). Problème SDK/WebSocket.`);
-        } else {
-          const text = await response.text();
-          setDebugStatus(`ÉCHEC TOTAL (SDK + REST ${response.status}): ${text}`);
-          setError(`REST Error: ${text}`);
-        }
-      } catch (restErr: any) {
-        setDebugStatus(`ÉCHEC TOTAL (Network): ${restErr.message}`);
-      }
+      setDebugStatus(`REST OK mais SDK ÉCHEC : ${err.message}`);
+      setError(err.message);
     }
   };
 
