@@ -17,9 +17,11 @@ import { useTranslation } from 'react-i18next';
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, onClose }) => {
   const { currentDept, logout, unreadCount, user } = useProject();
   const { t } = useTranslation();
 
@@ -55,57 +57,75 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   });
 
   return (
-    <div className="w-64 bg-slate-900 text-white flex flex-col h-screen relative">
-      <div className="p-6">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
-          CinéStock Vert
-        </h1>
-        <p className="text-xs text-slate-400 mt-1">{currentDept}</p>
-      </div>
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={onClose}
+        />
+      )}
 
-      <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
-        {filteredItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className=`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                isActive 
-                  ? 'bg-emerald-600 text-white' 
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-              }`
-            >
-              <Icon size={20} />
-              <span className="font-medium">{item.label}</span>
-              {item.id === 'inventory' && unreadCount > 0 && (
-                <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </nav>
+      <div className={`
+        fixed md:static inset-y-0 left-0 z-50
+        w-64 bg-slate-900 text-white flex flex-col h-dvh
+        transform transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+      `}>
+        <div className="p-6">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
+            CinéStock Vert
+          </h1>
+          <p className="text-xs text-slate-400 mt-1">{currentDept}</p>
+        </div>
 
-      <div className="p-4 border-t border-slate-800">
-        <button
-          onClick={logout}
-          className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-red-900/20 hover:text-red-400 transition-colors"
-        >
-          <LogOut size={20} />
-          <span className="font-medium">{t('nav.logout')}</span>
-        </button>
-      </div>
+        <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
+          {filteredItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  if (onClose) onClose();
+                }}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                  isActive 
+                    ? 'bg-emerald-600 text-white' 
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <Icon size={20} />
+                <span className="font-medium">{item.label}</span>
+                {item.id === 'inventory' && unreadCount > 0 && (
+                  <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
 
-      {/* Connection Status Indicator */}
-      <div className="absolute bottom-2 right-2 flex items-center gap-2 text-xs text-gray-400">
-        <div className={`w-2 h-2 rounded-full ${typeof navigator !== 'undefined' && navigator.onLine ? 'bg-green-500' : 'bg-red-500'}`} />
-        {typeof navigator !== 'undefined' && navigator.onLine ? 'Connecté' : 'Hors ligne'}
+        <div className="p-4 border-t border-slate-800 space-y-4">
+          <button
+            onClick={logout}
+            className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-red-900/20 hover:text-red-400 transition-colors"
+          >
+            <LogOut size={20} />
+            <span className="font-medium">{t('nav.logout')}</span>
+          </button>
+
+          {/* Connection Status Indicator - Now in flow */}
+          <div className="flex items-center justify-center gap-2 text-xs text-gray-400 pt-2">
+            <div className={`w-2 h-2 rounded-full ${typeof navigator !== 'undefined' && navigator.onLine ? 'bg-green-500' : 'bg-red-500'}`} />
+            {typeof navigator !== 'undefined' && navigator.onLine ? 'Connecté' : 'Hors ligne'}
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
