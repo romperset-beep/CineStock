@@ -129,27 +129,31 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       return;
     }
 
-    // 2. Test SDK with Timeout (READ ONLY)
+    // 2. Test SDK with Timeout (WRITE)
     try {
-      const { getDocs, collection } = await import('firebase/firestore');
-      // await enableNetwork(db); // Removed to avoid potential hang
+      const { enableNetwork, addDoc, collection } = await import('firebase/firestore');
+      // await enableNetwork(db); 
 
       const testRef = collection(db, '_debug_connection');
 
-      // Race between getDocs and a 5s timeout
+      // Race between addDoc and a 5s timeout
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Timeout (5s) - Le SDK bloque en LECTURE")), 5000)
+        setTimeout(() => reject(new Error("Timeout (5s) - Le SDK bloque en ÉCRITURE")), 5000)
       );
 
       await Promise.race([
-        getDocs(testRef),
+        addDoc(testRef, {
+          timestamp: new Date(),
+          user: user?.email || 'anonymous',
+          device: navigator.userAgent
+        }),
         timeoutPromise
       ]);
 
-      setDebugStatus("SUCCÈS TOTAL (REST + SDK LECTURE) ! 🎉");
+      setDebugStatus("SUCCÈS TOTAL (REST + SDK ÉCRITURE) ! 🎉");
     } catch (err: any) {
       console.error("SDK Error:", err);
-      setDebugStatus(`REST OK mais SDK LECTURE ÉCHEC : ${err.message}`);
+      setDebugStatus(`REST OK mais SDK ÉCRITURE ÉCHEC : ${err.message}`);
       setError(err.message);
     }
   };
