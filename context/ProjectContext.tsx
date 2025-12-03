@@ -342,12 +342,15 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   // 2. Sync Social Posts
   useEffect(() => {
     const projectId = project.id;
+    console.log(`[SocialWall] Init listener for project: ${projectId}`);
+
     if (!projectId || projectId === 'default-project') return;
 
     const postsRef = collection(db, 'projects', projectId, 'socialPosts');
     const q = query(postsRef, orderBy('date', 'desc'));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
+      console.log(`[SocialWall] Snapshot received. Docs: ${snapshot.size}`);
       const posts: SocialPost[] = [];
       snapshot.forEach((doc) => {
         // Convert Firestore Timestamp to Date
@@ -359,26 +362,38 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         } as SocialPost);
       });
       setSocialPosts(posts);
+    }, (err) => {
+      console.error("[SocialWall] Listener Error:", err);
+      setError(`Social Wall Sync Error: ${err.message}`);
     });
 
     return () => unsubscribe();
   }, [project.id]);
 
   const addSocialPost = async (post: SocialPost) => {
-    const projectId = project.id;
-    const postsRef = collection(db, 'projects', projectId, 'socialPosts');
-    const { id, ...postData } = post;
-    await addDoc(postsRef, {
-      ...postData,
-      date: new Date() // Ensure server timestamp
-    });
+    try {
+      const projectId = project.id;
+      console.log(`[SocialWall] Adding post to project: ${projectId}`);
 
-    // Notification is handled by local state for now, or could be synced too
-    addNotification(
-      `Nouveau message de ${post.authorName} sur le mur social`,
-      'INFO',
-      'PRODUCTION'
-    );
+      const postsRef = collection(db, 'projects', projectId, 'socialPosts');
+      const { id, ...postData } = post;
+      await addDoc(postsRef, {
+        ...postData,
+        date: new Date() // Ensure server timestamp
+      });
+      console.log("[SocialWall] Post added successfully");
+
+      // Notification is handled by local state for now, or could be synced too
+      addNotification(
+        `Nouveau message de ${post.authorName} sur le mur social`,
+        'INFO',
+        'PRODUCTION'
+      );
+    } catch (err: any) {
+      console.error("[SocialWall] Add Error:", err);
+      setError(`Erreur d'envoi : ${err.message}`);
+      alert(`Erreur d'envoi : ${err.message}`);
+    }
   };
 
   const updateUserProfile = (profile: UserProfile) => {
