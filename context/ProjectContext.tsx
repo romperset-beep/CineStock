@@ -71,6 +71,8 @@ interface ProjectContextType {
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
   error: string | null;
+  testConnection: () => Promise<void>;
+  debugStatus: string;
 }
 
 const DEFAULT_PROJECT: Project = {
@@ -103,6 +105,29 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [socialPosts, setSocialPosts] = useState<SocialPost[]>([]);
   const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [debugStatus, setDebugStatus] = useState<string>("");
+
+  const testConnection = async () => {
+    setDebugStatus("Test en cours...");
+    try {
+      const { enableNetwork, addDoc, collection } = await import('firebase/firestore');
+      await enableNetwork(db);
+      setDebugStatus("Réseau activé. Tentative d'écriture...");
+
+      const testRef = collection(db, '_debug_connection');
+      await addDoc(testRef, {
+        timestamp: new Date(),
+        user: user?.email || 'anonymous',
+        device: navigator.userAgent
+      });
+
+      setDebugStatus("SUCCÈS ! Écriture réussie sur le serveur.");
+    } catch (err: any) {
+      console.error("Test Connection Error:", err);
+      setDebugStatus(`ÉCHEC : ${err.message}`);
+      setError(err.message);
+    }
+  };
 
   const t = (key: string): string => {
     // @ts-ignore
@@ -350,7 +375,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       language,
       setLanguage,
       t,
-      error
+      error,
+      testConnection,
+      debugStatus
     }}>
       {children}
     </ProjectContext.Provider>

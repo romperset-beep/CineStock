@@ -11,7 +11,7 @@ interface ProjectManagerProps {
 export const ProjectManager: React.FC<ProjectManagerProps> = ({
     setActiveTab,
 }) => {
-    const { project, setProject, currentDept, setCurrentDept, setCircularView, buyBackItems, socialPosts, userProfiles, user, t, error } = useProject();
+    const { project, setProject, currentDept, setCurrentDept, setCircularView, buyBackItems, socialPosts, userProfiles, user, t, error, testConnection, debugStatus } = useProject();
 
     // Filter items based on current view (Department vs Production)
     const filteredItems = currentDept === 'PRODUCTION'
@@ -164,9 +164,23 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({
                     <p>Last Render: <span className="text-white">{new Date().toLocaleTimeString()}</span></p>
                     <p>Source: <span className="text-white">{(window as any).firestoreSource || 'Unknown'}</span></p>
                     <p>API Key: <span className={import.meta.env.VITE_FIREBASE_API_KEY ? "text-green-400" : "text-red-500"}>
-                        {import.meta.env.VITE_FIREBASE_API_KEY ? "Chargée ✅" : "MANQUANTE ❌"}
+                        {import.meta.env.VITE_FIREBASE_API_KEY ? `Chargée (${import.meta.env.VITE_FIREBASE_API_KEY.substring(0, 5)}...)` : "MANQUANTE ❌"}
                     </span></p>
+                    <p>Online: <span className={navigator.onLine ? "text-green-400" : "text-red-500"}>{navigator.onLine ? "Oui" : "Non"}</span></p>
                 </div>
+
+                <div className="mt-4 border-t border-red-900/50 pt-4">
+                    <button
+                        onClick={testConnection}
+                        className="bg-red-800 hover:bg-red-700 text-white px-4 py-2 rounded text-xs font-bold uppercase tracking-wider"
+                    >
+                        Tester la Connexion Serveur
+                    </button>
+                    {debugStatus && (
+                        <p className="mt-2 text-yellow-400 font-bold">{debugStatus}</p>
+                    )}
+                </div>
+
                 {error && (
                     <div className="mt-2 p-2 bg-red-950 border border-red-500 rounded">
                         <p className="font-bold text-red-500">ERREUR FIRESTORE :</p>
