@@ -15,8 +15,10 @@ export const TRANSLATIONS = {
         // Sidebar
         'sidebar.dashboard': 'Tableau de Bord',
         'sidebar.inventory': 'Mon Stock',
+        'sidebar.marketplace': "Zone d'Achat",
+        'sidebar.donations': 'Économie Circulaire',
         'sidebar.globalStock': 'Stock Global',
-        'sidebar.circular': 'Économie Circulaire',
+        'sidebar.circular': 'Économie Circulaire', // Legacy
         'sidebar.expenses': 'Notes de Frais',
         'sidebar.buyback': 'À Racheter',
         'sidebar.social': 'Mur Social',
