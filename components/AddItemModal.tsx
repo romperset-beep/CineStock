@@ -93,7 +93,7 @@ interface AddItemModalProps {
 }
 
 export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) => {
-    const { setProject, currentDept, project, addNotification, user } = useProject();
+    const { setProject, currentDept, project, addNotification, user, addItem } = useProject();
 
     const [newItemName, setNewItemName] = useState('');
     const [newItemQty, setNewItemQty] = useState(1);
@@ -188,8 +188,11 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
 
     if (!isOpen) return null;
 
-    const handleAddItem = () => {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleAddItem = async () => {
         if (!newItemName) return;
+        setIsSubmitting(true);
 
         // Determine final department:
         // If user is PRODUCTION (Admin) or REGIE, they can order for the selected department.
@@ -199,7 +202,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
             : (currentDept as Department);
 
         const newItem: ConsumableItem = {
-            id: Math.random().toString(36).substr(2, 9),
+            id: Math.random().toString(36).substr(2, 9), // Will be ignored by addItem
             name: newItemName,
             department: finalDepartment,
             quantityInitial: newItemQty,
@@ -210,18 +213,14 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
             purchased: false // Request/Need
         };
 
-        setProject(prev => ({
-            ...prev,
-            items: [...prev.items, newItem]
-        }));
+        // Use Firestore Action instead of local state
+        await addItem(newItem);
 
-        // Notify Production
-        addNotification(
-            `Nouvelle commande de ${newItemQty}x ${newItemName} (${finalDepartment}) par ${user?.name}`,
-            'ORDER',
-            Department.REGIE,
-            newItem.id
-        );
+        // Notification is now handled inside addItem (or we can keep it here if we remove it from context)
+        // For now, let's rely on context's addItem notification to avoid duplicates if we added it there.
+        // Checking context... yes, addItem adds a notification.
+
+        setIsSubmitting(false);
 
         // Reset and close
         setNewItemName('');
@@ -454,11 +453,11 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
                     </button>
                     <button
                         onClick={handleAddItem}
-                        disabled={!newItemName}
+                        disabled={!newItemName || isSubmitting}
                         className="bg-eco-600 hover:bg-eco-500 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-eco-900/20 flex items-center gap-2"
                     >
-                        <Plus className="h-4 w-4" />
-                        Ajouter à la liste
+                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                        {isSubmitting ? 'Envoi...' : 'Ajouter à la liste'}
                     </button>
                 </div>
 
