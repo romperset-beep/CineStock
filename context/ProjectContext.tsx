@@ -53,6 +53,10 @@ interface ProjectContextType {
   markAsRead: (id: string) => void;
   markNotificationAsReadByItemId: (itemId: string) => void;
   unreadCount: number;
+  unreadSocialCount: number;
+  unreadMarketplaceCount: number;
+  markSocialAsRead: () => void;
+  markMarketplaceAsRead: () => void;
 
   // Expense Reports
   expenseReports: ExpenseReport[];
@@ -108,6 +112,31 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [error, setError] = useState<string | null>(null);
   const [debugStatus, setDebugStatus] = useState<string>("");
   const [lastLog, setLastLog] = useState<string>("En attente...");
+
+  // Notification State
+  const [lastReadSocial, setLastReadSocial] = useState<number>(() => {
+    const saved = localStorage.getItem('lastReadSocial');
+    return saved ? Number(saved) : Date.now();
+  });
+  const [lastReadMarketplace, setLastReadMarketplace] = useState<number>(() => {
+    const saved = localStorage.getItem('lastReadMarketplace');
+    return saved ? Number(saved) : Date.now();
+  });
+
+  const unreadSocialCount = socialPosts.filter(p => new Date(p.date).getTime() > lastReadSocial).length;
+  const unreadMarketplaceCount = buyBackItems.filter(i => new Date(i.date).getTime() > lastReadMarketplace).length;
+
+  const markSocialAsRead = () => {
+    const now = Date.now();
+    setLastReadSocial(now);
+    localStorage.setItem('lastReadSocial', String(now));
+  };
+
+  const markMarketplaceAsRead = () => {
+    const now = Date.now();
+    setLastReadMarketplace(now);
+    localStorage.setItem('lastReadMarketplace', String(now));
+  };
 
   const testConnection = async () => {
     setDebugStatus("1. Test REST API en cours...");
@@ -519,7 +548,12 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       markAsRead,
       markNotificationAsReadByItemId,
       unreadCount,
-      expenseReports,
+      unreadSocialCount,
+      unreadMarketplaceCount,
+      markSocialAsRead,
+      markMarketplaceAsRead,
+
+      // Expense Reports,
       addExpenseReport,
       updateExpenseReportStatus,
       buyBackItems,
