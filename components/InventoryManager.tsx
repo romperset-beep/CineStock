@@ -7,7 +7,7 @@ import { ExpenseReportModal } from './ExpenseReportModal';
 import { ErrorBoundary } from './ErrorBoundary';
 
 export const InventoryManager: React.FC = () => {
-    const { project, setProject, currentDept, addNotification, user, markNotificationAsReadByItemId } = useProject();
+    const { project, setProject, currentDept, addNotification, user, markNotificationAsReadByItemId, updateItem } = useProject();
 
     // Form State
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -91,74 +91,93 @@ export const InventoryManager: React.FC = () => {
         });
     };
 
-    const updateQuantity = (id: string, change: number) => {
+    const updateQuantity = async (id: string, change: number) => {
+        const item = project.items.find(i => i.id === id);
+        if (!item) return;
+
+        const newQty = Math.max(0, item.quantityCurrent + change);
+        let newStatus = item.status;
+        if (newQty === 0) newStatus = ItemStatus.EMPTY;
+        else if (newQty < item.quantityInitial) newStatus = ItemStatus.USED;
+
+        const updatedItem = { ...item, quantityCurrent: newQty, status: newStatus };
+
         setProject(prev => ({
             ...prev,
-            items: prev.items.map(item => {
-                if (item.id === id) {
-                    const newQty = Math.max(0, item.quantityCurrent + change);
-                    let newStatus = item.status;
-                    if (newQty === 0) newStatus = ItemStatus.EMPTY;
-                    else if (newQty < item.quantityInitial) newStatus = ItemStatus.USED;
-
-                    return { ...item, quantityCurrent: newQty, status: newStatus };
-                }
-                return item;
-            })
+            items: prev.items.map(i => i.id === id ? updatedItem : i)
         }));
+
+        if (updateItem) await updateItem(updatedItem);
     };
 
-    const markAsBought = (id: string) => {
+    const markAsBought = async (id: string) => {
+        const item = project.items.find(i => i.id === id);
+        if (!item) return;
+
+        const updatedItem = { ...item, isBought: true };
+
         setProject(prev => ({
             ...prev,
-            items: prev.items.map(item =>
-                item.id === id ? { ...item, isBought: true } : item
-            )
+            items: prev.items.map(i => i.id === id ? updatedItem : i)
         }));
+
+        if (updateItem) await updateItem(updatedItem);
         markNotificationAsReadByItemId(id);
     };
 
-    const markAsPurchased = (id: string) => {
+    const markAsPurchased = async (id: string) => {
+        const item = project.items.find(i => i.id === id);
+        if (!item) return;
+
+        const updatedItem = { ...item, purchased: true, isBought: false };
+
         setProject(prev => ({
             ...prev,
-            items: prev.items.map(item =>
-                item.id === id ? { ...item, purchased: true, isBought: false } : item
-            )
+            items: prev.items.map(i => i.id === id ? updatedItem : i)
         }));
+
+        if (updateItem) await updateItem(updatedItem);
         markNotificationAsReadByItemId(id);
     };
 
-    const incrementStarted = (id: string) => {
-        setProject(prev => ({
-            ...prev,
-            items: prev.items.map(item => {
-                if (item.id === id) {
-                    const currentStarted = item.quantityStarted || 0;
-                    if (currentStarted < item.quantityCurrent) {
-                        return { ...item, quantityStarted: currentStarted + 1, status: ItemStatus.USED };
-                    }
-                }
-                return item;
-            })
-        }));
-    };
+    const incrementStarted = async (id: string) => {
+        const item = project.items.find(i => i.id === id);
+        if (!item) return;
 
-    const setSurplusAction = (id: string, action: SurplusAction) => {
-        setProject(prev => {
-            const item = prev.items.find(i => i.id === id);
-            if (item && action !== SurplusAction.NONE) {
-                const actionName = action === SurplusAction.MARKETPLACE ? 'Stock Virtuel' : 'Dons';
-                addNotification(
-                    `♻️ Surplus : ${item.name} (${item.department}) déplacé vers ${actionName} par ${user?.name || 'Département'}`,
-                    'STOCK_MOVE',
-                    'PRODUCTION'
-                );
-            }
-            return {
+        const currentStarted = item.quantityStarted || 0;
+        if (currentStarted < item.quantityCurrent) {
+            const updatedItem = { ...item, quantityStarted: currentStarted + 1, status: ItemStatus.USED };
+
+            setProject(prev => ({
                 ...prev,
-                items: prev.items.map(item => item.id === id ? { ...item, surplusAction: action } : item)
-            };
-        });
+                items: prev.items.map(i => i.id === id ? updatedItem : i)
+            }));
+
+            if (updateItem) await updateItem(updatedItem);
+        }
+    };
+
+    const setSurplusAction = async (id: string, action: SurplusAction) => {
+        const item = project.items.find(i => i.id === id);
+        if (!item) return;
+
+        if (action !== SurplusAction.NONE) {
+            const actionName = action === SurplusAction.MARKETPLACE ? 'Stock Virtuel' : 'Dons';
+            addNotification(
+                `♻️ Surplus : ${item.name} (${item.department}) déplacé vers ${actionName} par ${user?.name || 'Département'}`,
+                'STOCK_MOVE',
+                'PRODUCTION'
+            );
+        }
+
+        const updatedItem = { ...item, surplusAction: action };
+
+        setProject(prev => ({
+            ...prev,
+            items: prev.items.map(i => i.id === id ? updatedItem : i)
+        }));
+
+        if (updateItem) await updateItem(updatedItem);
     };
 
     const handleSurplusClick = (item: any, action: SurplusAction) => {
