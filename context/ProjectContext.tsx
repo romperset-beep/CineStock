@@ -170,16 +170,19 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Listen to the 'items' subcollection of the project
     // Use dynamic project ID from state (derived from login)
     const projectId = project.id;
+    console.log(`[ItemsSync] Init listener for project: ${projectId}`);
 
     if (!projectId || projectId === 'default-project') return;
 
     const itemsRef = collection(db, 'projects', projectId, 'items');
 
     const unsubscribe = onSnapshot(itemsRef, (snapshot) => {
+      console.log(`[ItemsSync] Snapshot received. Docs: ${snapshot.size}`);
       const items: ConsumableItem[] = [];
       snapshot.forEach((doc) => {
         items.push({ id: doc.id, ...doc.data() } as ConsumableItem);
       });
+      console.log(`[ItemsSync] Parsed ${items.length} items`);
 
       setProject(prev => ({ ...prev, items }));
 
