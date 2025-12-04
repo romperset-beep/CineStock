@@ -377,8 +377,14 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
       const postsRef = collection(db, 'projects', projectId, 'socialPosts');
       const { id, ...postData } = post;
+
+      // Firestore doesn't support 'undefined', replace with null
+      const sanitizedData = Object.fromEntries(
+        Object.entries(postData).map(([k, v]) => [k, v === undefined ? null : v])
+      );
+
       await addDoc(postsRef, {
-        ...postData,
+        ...sanitizedData,
         date: new Date() // Ensure server timestamp
       });
       console.log("[SocialWall] Post added successfully");
