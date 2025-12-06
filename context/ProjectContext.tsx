@@ -31,6 +31,7 @@ import {
 interface ProjectContextType {
   project: Project;
   setProject: React.Dispatch<React.SetStateAction<Project>>;
+  updateProjectDetails: (updates: Partial<Project>) => Promise<void>;
 
   // Firestore Actions
   addItem: (item: ConsumableItem) => Promise<void>;
@@ -112,6 +113,45 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [error, setError] = useState<string | null>(null);
   const [debugStatus, setDebugStatus] = useState<string>("");
   const [lastLog, setLastLog] = useState<string>("En attente...");
+
+  // Sync Project Metadata (Dates, Status, etc.)
+  useEffect(() => {
+    const projectId = project.id;
+    if (!projectId || projectId === 'default-project') return;
+
+    const projectRef = doc(db, 'projects', projectId);
+    const unsubscribe = onSnapshot(projectRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        console.log("[ProjectSync] Metadata received:", data);
+        setProject(prev => ({
+          ...prev,
+          ...data,
+          // Ensure ID stays consistent
+          id: projectId
+        }));
+      }
+    });
+
+    return () => unsubscribe();
+  }, [project.id]);
+
+  const updateProjectDetails = async (updates: Partial<Project>) => {
+    try {
+      const projectId = project.id;
+      if (!projectId || projectId === 'default-project') return;
+
+      const projectRef = doc(db, 'projects', projectId);
+      // Optimistic update
+      setProject(prev => ({ ...prev, ...updates }));
+
+      await setDoc(projectRef, updates, { merge: true });
+      console.log("[ProjectSync] Updated successfully:", updates);
+    } catch (err: any) {
+      console.error("[ProjectSync] Error updating project:", err);
+      setError(`Erreur de sauvegarde : ${err.message}`);
+    }
+  };
 
   // Notification State
   const [lastReadSocial, setLastReadSocial] = useState<number>(() => {
@@ -533,6 +573,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     <ProjectContext.Provider value={{
       project,
       setProject,
+      updateProjectDetails,
       addItem,
       updateItem,
       deleteItem,

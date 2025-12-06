@@ -11,7 +11,7 @@ interface ProjectManagerProps {
 export const ProjectManager: React.FC<ProjectManagerProps> = ({
     setActiveTab,
 }) => {
-    const { project, setProject, currentDept, setCurrentDept, setCircularView, buyBackItems, socialPosts, userProfiles, user, t, error, testConnection, debugStatus, lastLog } = useProject();
+    const { project, setProject, updateProjectDetails, currentDept, setCurrentDept, setCircularView, buyBackItems, socialPosts, userProfiles, user, t, error, testConnection, debugStatus, lastLog } = useProject();
 
     // Filter items based on current view (Department vs Production)
     const filteredItems = currentDept === 'PRODUCTION'
@@ -62,7 +62,7 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({
                             <input
                                 type="date"
                                 value={project.shootingStartDate || ''}
-                                onChange={(e) => setProject(prev => ({ ...prev, shootingStartDate: e.target.value }))}
+                                onChange={(e) => updateProjectDetails({ shootingStartDate: e.target.value })}
                                 className="bg-cinema-800 border border-cinema-600 rounded px-3 py-1 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                             />
                         ) : (
@@ -80,7 +80,7 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({
                             <input
                                 type="date"
                                 value={project.shootingEndDate || ''}
-                                onChange={(e) => setProject(prev => ({ ...prev, shootingEndDate: e.target.value }))}
+                                onChange={(e) => updateProjectDetails({ shootingEndDate: e.target.value })}
                                 className="bg-cinema-800 border border-cinema-600 rounded px-3 py-1 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                             />
                         ) : (

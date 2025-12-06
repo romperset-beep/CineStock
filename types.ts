@@ -14,6 +14,16 @@ export enum Department {
   ACCESSOIRE = 'Accessoire'
 }
 
+export interface Notification {
+  id: string;
+  message: string;
+  type: 'INFO' | 'WARNING' | 'SUCCESS' | 'ERROR';
+  date: Date;
+  read: boolean;
+  targetDept?: Department | 'PRODUCTION';
+  itemId?: string;
+}
+
 export enum ItemStatus {
   NEW = 'Neuf',
   USED = 'Entamé',
