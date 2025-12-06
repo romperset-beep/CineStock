@@ -73,7 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, onCl
       `}>
         <div className="p-6">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
-            CinéStock Vert
+            A Better Set
           </h1>
           <p className="text-xs text-slate-400 mt-1">{currentDept}</p>
         </div>

@@ -309,7 +309,7 @@ export const InventoryManager: React.FC = () => {
             body += `- ${item.name} (${item.department}) : ${item.quantityInitial} ${item.unit}\n`;
         });
 
-        body += `\nCordialement CinéStock`;
+        body += `\nCordialement A Better Set`;
 
         window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     };

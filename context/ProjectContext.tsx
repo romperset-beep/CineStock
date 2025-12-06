@@ -82,7 +82,7 @@ interface ProjectContextType {
 
 const DEFAULT_PROJECT: Project = {
   id: 'default-project',
-  name: 'CinéStock Demo',
+  name: 'A Better Set Demo',
   productionCompany: 'Horizon Productions',
   startDate: '2023-10-15',
   shootingStartDate: '2023-11-01',

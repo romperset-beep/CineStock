@@ -27,7 +27,7 @@ export const ImpactReport: React.FC = () => {
 
     // Calculate Pie Chart Data (Lifecycle)
     const surplusItems = project.items.filter(i => i.quantityCurrent > 0);
-    
+
     // Heuristics for Estimation
     const getEstimatedPrice = (item: any) => {
         if (item.price) return item.price;
@@ -106,7 +106,7 @@ export const ImpactReport: React.FC = () => {
             const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
             pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            
+
             const fileName = `Rapport_RSE_${project.name.replace(/\s+/g, '_')}.pdf`;
 
             if (navigator.share) {
@@ -205,7 +205,7 @@ export const ImpactReport: React.FC = () => {
                             <div className="flex-1">
                                 <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
                                     <Award className="text-yellow-400 h-6 w-6" />
-                                    Certification CinéStock Vert
+                                    Certification A Better Set
                                 </h3>
                                 <p className="text-slate-300 leading-relaxed italic">
                                     "{metrics.aiAnalysis}"
@@ -245,19 +245,19 @@ export const ImpactReport: React.FC = () => {
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-lg font-bold text-white">Cycle de Vie des Consommables</h3>
                             <div className="flex bg-cinema-900 rounded-lg p-1">
-                                <button 
+                                <button
                                     onClick={() => setChartView('quantity')}
                                     className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${chartView === 'quantity' ? 'bg-cinema-700 text-white' : 'text-slate-400 hover:text-white'}`}
                                 >
                                     Quantité
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => setChartView('money')}
                                     className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${chartView === 'money' ? 'bg-cinema-700 text-white' : 'text-slate-400 hover:text-white'}`}
                                 >
                                     Économie (€)
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => setChartView('co2')}
                                     className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${chartView === 'co2' ? 'bg-cinema-700 text-white' : 'text-slate-400 hover:text-white'}`}
                                 >
@@ -280,7 +280,7 @@ export const ImpactReport: React.FC = () => {
                                         <Cell key={`cell-${index}`} fill={entry.color} />
                                     ))}
                                 </Pie>
-                                <Tooltip 
+                                <Tooltip
                                     contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' }}
                                     itemStyle={{ color: '#fff' }}
                                     formatter={(value: number) => formatValue(value)}
