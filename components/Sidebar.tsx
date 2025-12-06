@@ -33,12 +33,12 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, onCl
     { id: 'expenses', label: t('sidebar.expenses'), icon: Euro },
     { id: 'social', label: t('sidebar.social'), icon: MessageSquare },
     { id: 'team', label: t('sidebar.team'), icon: Users },
-    { id: 'settings', label: t('sidebar.profile'), icon: Settings },
+    { id: 'profile', label: t('sidebar.profile'), icon: Settings },
   ];
 
   // Filter items based on department
   const filteredItems = menuItems.filter(item => {
-    if (item.id === 'settings') return true;
+    if (item.id === 'profile') return true;
     if (item.id === 'social') return true;
 
     // Production sees everything
