@@ -154,44 +154,7 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({
 
             </div>
 
-            {/* DEBUG INFO */}
-            <div className="mt-8 p-4 bg-red-900/20 border border-red-900/50 rounded text-xs font-mono text-red-300">
-                <p className="font-bold mb-2">🔧 DEBUG ZONE (Vérification Synchro)</p>
-                <div className="grid grid-cols-2 gap-4">
-                    <p>Project ID: <span className="text-white">{project.id}</span></p>
-                    <p>Items Loaded: <span className="text-white">{project.items.length}</span></p>
-                    <p>User: <span className="text-white">{user?.name} ({user?.department})</span></p>
-                    <p>Last Render: <span className="text-white">{new Date().toLocaleTimeString()}</span></p>
-                    <p>Source: <span className="text-white">{(window as any).firestoreSource || 'Unknown'}</span></p>
-                    <p>API Key: <span className={import.meta.env.VITE_FIREBASE_API_KEY ? "text-green-400" : "text-red-500"}>
-                        {import.meta.env.VITE_FIREBASE_API_KEY ? `Chargée (${import.meta.env.VITE_FIREBASE_API_KEY.substring(0, 5)}...)` : "MANQUANTE ❌"}
-                    </span></p>
-                    <p>Online: <span className={navigator.onLine ? "text-green-400" : "text-red-500"}>{navigator.onLine ? "Oui" : "Non"}</span></p>
-                </div>
 
-                <div className="mt-4 border-t border-red-900/50 pt-4">
-                    <button
-                        onClick={testConnection}
-                        className="bg-red-800 hover:bg-red-700 text-white px-4 py-2 rounded text-xs font-bold uppercase tracking-wider"
-                    >
-                        Tester la Connexion Serveur
-                    </button>
-                    {debugStatus && (
-                        <p className="mt-2 text-yellow-400 font-bold">{debugStatus}</p>
-                    )}
-                    <div className="mt-2 pt-2 border-t border-red-900/30">
-                        <p className="text-slate-400">Dernier Log Synchro :</p>
-                        <p className="text-blue-300 font-mono break-all">{lastLog}</p>
-                    </div>
-                </div>
-
-                {error && (
-                    <div className="mt-2 p-2 bg-red-950 border border-red-500 rounded">
-                        <p className="font-bold text-red-500">ERREUR FIRESTORE :</p>
-                        <p className="text-white break-all">{error}</p>
-                    </div>
-                )}
-            </div>
         </div>
     );
 };
