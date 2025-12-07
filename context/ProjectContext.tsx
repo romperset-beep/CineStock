@@ -16,7 +16,7 @@ import {
 } from '../types';
 import { TRANSLATIONS } from './translations';
 import { db, auth } from '../services/firebase';
-import { signInAnonymously } from 'firebase/auth';
+import { signInAnonymously, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 import {
   collection,
   doc,
@@ -24,10 +24,106 @@ import {
   updateDoc,
   addDoc,
   setDoc,
+  getDoc,
   query,
   orderBy,
   arrayUnion
 } from 'firebase/firestore';
+
+// ... (keep interface but add register and joinProject)
+interface ProjectContextType {
+  // ... existing
+  register: (email: string, pass: string, name: string, dept: Department | 'PRODUCTION') => Promise<void>;
+  joinProject: (prod: string, film: string) => Promise<void>;
+  // ... existing
+}
+
+// ... inside Provider ...
+
+// Auth State Listener
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    if (firebaseUser) {
+      console.log("Auth State: Logged In", firebaseUser.uid);
+      // Fetch User Profile from Firestore
+      const userRef = doc(db, 'users', firebaseUser.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const userData = userSnap.data() as User;
+        setUser(userData);
+
+        // If user has a project attached, load it
+        if (userData.productionName && userData.filmTitle) {
+          await joinProject(userData.productionName, userData.filmTitle);
+        }
+      }
+    } else {
+      console.log("Auth State: Logged Out");
+      setUser(null);
+      setProject(DEFAULT_PROJECT);
+    }
+  });
+  return () => unsubscribe();
+}, []);
+
+const register = async (email: string, pass: string, name: string, dept: Department | 'PRODUCTION') => {
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    // Create User Profile
+    const newUser: User = {
+      name,
+      email,
+      department: dept,
+      productionName: '', // Initially empty
+      filmTitle: ''       // Initially empty
+    };
+    await setDoc(doc(db, 'users', cred.user.uid), newUser);
+    // User state will be set by onAuthStateChanged
+  } catch (err: any) {
+    throw new Error(err.message);
+  }
+};
+
+const login = async (email: string, pass: string) => {
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+    // User state set by listener
+  } catch (err: any) {
+    throw new Error("Email ou mot de passe incorrect.");
+  }
+};
+
+const joinProject = async (prod: string, film: string) => {
+  if (!auth.currentUser || !user) return;
+
+  const projectId = generateProjectId(prod, film);
+
+  // 1. Update Local Project State
+  setProject(prev => ({
+    ...prev,
+    id: projectId,
+    name: film,
+    productionCompany: prod
+  }));
+
+  // 2. Update Persisted User Profile with new current project
+  const updatedUser = { ...user, productionName: prod, filmTitle: film };
+  setUser(updatedUser); // Optimistic
+
+  await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+    productionName: prod,
+    filmTitle: film
+  });
+
+  addNotification(`Bienvenue sur le plateau de "${film}" !`, 'INFO', user.department);
+};
+
+const logout = async () => {
+  await signOut(auth);
+  localStorage.removeItem('cineStockUser'); // Clean legacy
+  setCurrentDept('PRODUCTION');
+};
 
 interface ProjectContextType {
   project: Project;
@@ -596,6 +692,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       project,
       setProject,
       updateProjectDetails,
+      joinProject,
       addItem,
       updateItem,
       deleteItem,
@@ -605,6 +702,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       setCircularView,
       user,
       login,
+      register,
       logout,
       notifications: userNotifications,
       addNotification,
