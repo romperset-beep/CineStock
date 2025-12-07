@@ -7,7 +7,7 @@ interface ProjectSelectionProps {
 }
 
 export const ProjectSelection: React.FC<ProjectSelectionProps> = ({ onProjectSelected }) => {
-    const { updateProjectDetails, user, logout } = useProject();
+    const { updateProjectDetails, user, logout, joinProject } = useProject();
     const [isLoading, setIsLoading] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -21,14 +21,7 @@ export const ProjectSelection: React.FC<ProjectSelectionProps> = ({ onProjectSel
 
         setIsLoading(true);
         try {
-            // @ts-ignore - Assuming updateProjectDetails or a new joinProject function will handle this
-            // For now, we reuse the context update logic 
-            // In the context update, we will need to ensure this sets the Active Project
-            await updateProjectDetails({
-                productionCompany: formData.productionName,
-                name: formData.filmTitle,
-                // ID generation happens inside context usually, or we pass generated ID
-            });
+            await joinProject(formData.productionName, formData.filmTitle);
             onProjectSelected();
         } catch (err) {
             console.error(err);

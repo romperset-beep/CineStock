@@ -30,100 +30,8 @@ import {
   arrayUnion
 } from 'firebase/firestore';
 
-// ... (keep interface but add register and joinProject)
-interface ProjectContextType {
-  // ... existing
-  register: (email: string, pass: string, name: string, dept: Department | 'PRODUCTION') => Promise<void>;
-  joinProject: (prod: string, film: string) => Promise<void>;
-  // ... existing
-}
+// Auth State Listener and Functions moved inside Provider
 
-// ... inside Provider ...
-
-// Auth State Listener
-useEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-    if (firebaseUser) {
-      console.log("Auth State: Logged In", firebaseUser.uid);
-      // Fetch User Profile from Firestore
-      const userRef = doc(db, 'users', firebaseUser.uid);
-      const userSnap = await getDoc(userRef);
-
-      if (userSnap.exists()) {
-        const userData = userSnap.data() as User;
-        setUser(userData);
-
-        // If user has a project attached, load it
-        if (userData.productionName && userData.filmTitle) {
-          await joinProject(userData.productionName, userData.filmTitle);
-        }
-      }
-    } else {
-      console.log("Auth State: Logged Out");
-      setUser(null);
-      setProject(DEFAULT_PROJECT);
-    }
-  });
-  return () => unsubscribe();
-}, []);
-
-const register = async (email: string, pass: string, name: string, dept: Department | 'PRODUCTION') => {
-  try {
-    const cred = await createUserWithEmailAndPassword(auth, email, pass);
-    // Create User Profile
-    const newUser: User = {
-      name,
-      email,
-      department: dept,
-      productionName: '', // Initially empty
-      filmTitle: ''       // Initially empty
-    };
-    await setDoc(doc(db, 'users', cred.user.uid), newUser);
-    // User state will be set by onAuthStateChanged
-  } catch (err: any) {
-    throw new Error(err.message);
-  }
-};
-
-const login = async (email: string, pass: string) => {
-  try {
-    await signInWithEmailAndPassword(auth, email, pass);
-    // User state set by listener
-  } catch (err: any) {
-    throw new Error("Email ou mot de passe incorrect.");
-  }
-};
-
-const joinProject = async (prod: string, film: string) => {
-  if (!auth.currentUser || !user) return;
-
-  const projectId = generateProjectId(prod, film);
-
-  // 1. Update Local Project State
-  setProject(prev => ({
-    ...prev,
-    id: projectId,
-    name: film,
-    productionCompany: prod
-  }));
-
-  // 2. Update Persisted User Profile with new current project
-  const updatedUser = { ...user, productionName: prod, filmTitle: film };
-  setUser(updatedUser); // Optimistic
-
-  await updateDoc(doc(db, 'users', auth.currentUser.uid), {
-    productionName: prod,
-    filmTitle: film
-  });
-
-  addNotification(`Bienvenue sur le plateau de "${film}" !`, 'INFO', user.department);
-};
-
-const logout = async () => {
-  await signOut(auth);
-  localStorage.removeItem('cineStockUser'); // Clean legacy
-  setCurrentDept('PRODUCTION');
-};
 
 interface ProjectContextType {
   project: Project;
@@ -142,7 +50,9 @@ interface ProjectContextType {
 
   // Auth
   user: User | null;
-  login: (user: User) => void;
+  login: (email: string, pass: string) => Promise<void>;
+  register: (email: string, pass: string, name: string, dept: Department | 'PRODUCTION') => Promise<void>; // Added
+  joinProject: (prod: string, film: string) => Promise<void>; // Added
   logout: () => void;
 
   // Notifications
@@ -211,16 +121,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [debugStatus, setDebugStatus] = useState<string>("");
   const [lastLog, setLastLog] = useState<string>("En attente...");
 
-  // Auto-login for persisted users
-  useEffect(() => {
-    if (user) {
-      signInAnonymously(auth).catch(err => {
-        console.error("Auto-login failed:", err);
-        setError("Session expirée. Veuillez vous reconnecter.");
-        logout();
-      });
-    }
-  }, []);
+  // Auto-login replaced by onAuthStateChanged listener below
 
   // Sync Project Metadata (Dates, Status, etc.)
   useEffect(() => {
@@ -462,50 +363,106 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       .replace(/^-+|-+$/g, '') || 'demo-project';
   };
 
+  // Auth State Listener
   useEffect(() => {
-    if (user) {
-      setCurrentDept(user.department);
-      // Update project ID from persisted user data to ensure sync
-      const newProjectId = generateProjectId(user.productionName, user.filmTitle);
-      setProject(prev => ({
-        ...prev,
-        id: newProjectId,
-        name: user.filmTitle,
-        productionCompany: user.productionName
-      }));
-    }
-  }, [user]);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        console.log("Auth State: Logged In", firebaseUser.uid);
+        // Fetch User Profile from Firestore
+        const userRef = doc(db, 'users', firebaseUser.uid);
+        try {
+          const userSnap = await getDoc(userRef);
+          if (userSnap.exists()) {
+            const userData = userSnap.data() as User;
+            setUser(userData);
 
-  const login = async (userData: User) => {
+            // If user has a project attached, load it
+            if (userData.productionName && userData.filmTitle) {
+              // We can call the helper directly if needed, but here we just update state 
+              // because loadProject should trigger via the project.id change
+              // But we need to SET the project.id
+              const pid = generateProjectId(userData.productionName, userData.filmTitle);
+              setProject(prev => ({
+                ...prev,
+                id: pid,
+                name: userData.filmTitle,
+                productionCompany: userData.productionName
+              }));
+            }
+          } else {
+            console.log("Auth Logged in but no firestore profile found (Legacy?)");
+            // If anonymous legacy user, we might want to keep them logged in?
+            // For now, let's treat them as new users or logout
+          }
+        } catch (e) {
+          console.error("Error fetching user profile", e);
+        }
+      } else {
+        console.log("Auth State: Logged Out");
+        setUser(null);
+        setProject(DEFAULT_PROJECT);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const register = async (email: string, pass: string, name: string, dept: Department | 'PRODUCTION') => {
     try {
-      console.log("[Auth] Starting anonymous login...");
-      await signInAnonymously(auth);
-      console.log("[Auth] Anonymous login successful");
-
-      setUser(userData);
-      localStorage.setItem('cineStockUser', JSON.stringify(userData));
-
-      // Force immediate update of project ID
-      const newProjectId = generateProjectId(userData.productionName, userData.filmTitle);
-      setProject(prev => ({
-        ...prev,
-        id: newProjectId,
-        name: userData.filmTitle,
-        productionCompany: userData.productionName
-      }));
-
-      addNotification(`Bienvenue ${userData.name} !`, 'INFO', userData.department);
-    } catch (error: any) {
-      console.error("[Auth] Login failed:", error);
-      setError("Erreur d'authentification : " + error.message);
-      alert("Erreur de connexion sécurisée. Vérifiez votre internet.");
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      // Create User Profile
+      const newUser: User = {
+        name,
+        email,
+        department: dept,
+        productionName: '', // Initially empty
+        filmTitle: ''       // Initially empty
+      };
+      await setDoc(doc(db, 'users', cred.user.uid), newUser);
+    } catch (err: any) {
+      console.error("Registration Error", err);
+      throw err; // Propagate to UI
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('cineStockUser');
+  const login = async (email: string, pass: string) => {
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch (err: any) {
+      console.error("Login Error", err);
+      throw err;
+    }
+  };
+
+  const joinProject = async (prod: string, film: string) => {
+    if (!auth.currentUser || !user) return;
+
+    const projectId = generateProjectId(prod, film);
+
+    // 1. Update Local Project State
+    setProject(prev => ({
+      ...prev,
+      id: projectId,
+      name: film,
+      productionCompany: prod
+    }));
+
+    // 2. Update Persisted User Profile with new current project
+    const updatedUser = { ...user, productionName: prod, filmTitle: film };
+    setUser(updatedUser); // Optimistic
+
+    await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+      productionName: prod,
+      filmTitle: film
+    });
+
+    addNotification(`Bienvenue sur le plateau de "${film}" !`, 'INFO', user.department);
+  };
+
+  const logout = async () => {
+    await signOut(auth);
+    localStorage.removeItem('cineStockUser'); // Clean legacy
     setCurrentDept('PRODUCTION');
+    setProject(DEFAULT_PROJECT);
   };
 
   // 3. Sync Notifications

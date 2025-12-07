@@ -12,6 +12,7 @@ import { UserProfilePage } from './components/UserProfilePage';
 import { TeamDirectory } from './components/TeamDirectory';
 import { ProjectProvider, useProject } from './context/ProjectContext';
 import { LoginPage } from './components/LoginPage';
+import { ProjectSelection } from './components/ProjectSelection';
 import { Bell, LogOut, User as UserIcon, Menu } from 'lucide-react';
 import { Department } from './types';
 
@@ -22,6 +23,40 @@ const AppContent: React.FC = () => {
 
   if (!user) {
     return <LoginPage />;
+  }
+
+  // Check if we need to wait for project auto-join
+  // If user has a production assigned but project is default, we are likely auto-joining
+  const isAutoJoining = user.productionName && user.filmTitle && (project.id === 'default-project' || !project.id);
+
+  // If user has NO production assigned, they MUST select one
+  const needsProjectSelection = (!user.productionName || !user.filmTitle) && (project.id === 'default-project' || !project.id);
+
+  if (isAutoJoining) {
+    return (
+      <div className="min-h-screen bg-cinema-900 flex items-center justify-center p-4">
+        <div className="text-center animate-pulse">
+          <div className="w-16 h-16 border-4 border-eco-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <h2 className="text-xl text-white font-semibold">Connexion au plateau {user.filmTitle}...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (needsProjectSelection) {
+    return (
+      <div className="min-h-screen bg-cinema-900 flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Reuse background from Login for consistency */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-eco-500/10 rounded-full blur-[100px]"></div>
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cinema-500/10 rounded-full blur-[100px]"></div>
+        </div>
+
+        <div className="relative z-10 w-full flex justify-center">
+          <ProjectSelection onProjectSelected={() => { /* Context updates state */ }} />
+        </div>
+      </div>
+    );
   }
 
   const renderContent = () => {
