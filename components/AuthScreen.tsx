@@ -36,8 +36,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess }) => {
                 await login(formData.email, formData.password);
             }
             onSuccess();
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
+            // Show visible feedback
+            alert(`Erreur: ${err.message || "Une erreur est survenue"}`);
         } finally {
             setIsLoading(false);
         }

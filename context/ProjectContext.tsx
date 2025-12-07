@@ -418,6 +418,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         filmTitle: ''       // Initially empty
       };
       await setDoc(doc(db, 'users', cred.user.uid), newUser);
+
+      // FIX: Explicitly set user state here to avoid race condition with onAuthStateChanged
+      setUser(newUser);
+
+      addNotification(`Bienvenue ${name} !`, 'INFO', dept);
     } catch (err: any) {
       console.error("Registration Error", err);
       throw err; // Propagate to UI
