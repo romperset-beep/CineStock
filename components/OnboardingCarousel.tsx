@@ -19,7 +19,7 @@ export const OnboardingCarousel: React.FC<OnboardingCarouselProps> = ({ onComple
             icon: ShoppingBag,
             color: "text-yellow-400",
             title: "Point de Revente",
-            description: "Accédez aux surplus Déco ou Costumes et réservez directement ce qui vous intéresse pour vos futurs projets."
+            description: "Accéder aux reventes des objets déco et costumes, réservez ce qui vous intéresse et récupérez les en fin de tournage !"
         },
         {
             icon: MessageSquare,
