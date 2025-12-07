@@ -42,7 +42,7 @@ export const ProjectSelection: React.FC<ProjectSelectionProps> = ({ onProjectSel
                             <Film className="h-8 w-8 text-white" />
                         </div>
                         <h2 className="text-2xl font-bold text-white mb-2">
-                            Bon retour, {user?.name.split(' ')[0]} !
+                            Bon retour, {user?.name ? user.name.split(' ')[0] : 'Cher Membre'} !
                         </h2>
                         <p className="text-slate-400 text-sm">
                             Voulez-vous reprendre votre travail sur ce projet ?
