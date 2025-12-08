@@ -16,6 +16,10 @@ export const InventoryManager: React.FC = () => {
     // const [selectedForExpense, setSelectedForExpense] = useState<Set<string>>(new Set());
     const [surplusConfirmation, setSurplusConfirmation] = useState<{ item: any, action: SurplusAction } | null>(null);
 
+    // Check shooting end date
+    const shootingEndDate = project.endDate ? new Date(project.endDate) : null;
+    const isShootingFinished = shootingEndDate ? new Date() >= shootingEndDate : false;
+
     // Expense Report State
     const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
     const [expenseItemName, setExpenseItemName] = useState<string>('');
@@ -162,7 +166,12 @@ export const InventoryManager: React.FC = () => {
         if (!item) return;
 
         if (action !== SurplusAction.NONE) {
-            const actionName = action === SurplusAction.MARKETPLACE ? 'Stock Virtuel' : 'Dons';
+            let actionName = 'Action inconnue';
+            if (action === SurplusAction.MARKETPLACE) actionName = 'Stock Virtuel';
+            else if (action === SurplusAction.DONATION) actionName = 'Dons';
+            else if (action === SurplusAction.SHORT_FILM) actionName = 'Court-Métrage';
+            else if (action === SurplusAction.RELEASED_TO_PROD) actionName = 'Libération Production';
+
             addNotification(
                 `♻️ Surplus : ${item.name} (${item.department}) déplacé vers ${actionName} par ${user?.name || 'Département'}`,
                 'STOCK_MOVE',
@@ -273,7 +282,10 @@ export const InventoryManager: React.FC = () => {
                     isBought: false
                 };
 
-                const actionName = action === SurplusAction.MARKETPLACE ? 'Stock Virtuel' : 'Dons';
+                let actionName = 'Action inconnue';
+                if (action === SurplusAction.MARKETPLACE) actionName = 'Stock Virtuel';
+                else if (action === SurplusAction.DONATION) actionName = 'Dons';
+                else if (action === SurplusAction.RELEASED_TO_PROD) actionName = 'Libération Production';
                 addNotification(
                     `♻️ Surplus (Partiel) : ${item.name} (${newQty} unités neufs) déplacé vers ${actionName}`,
                     'STOCK_MOVE',
@@ -322,6 +334,12 @@ export const InventoryManager: React.FC = () => {
     const visibleRequests = (currentDept === 'PRODUCTION' || currentDept === Department.REGIE)
         ? requestedItems
         : requestedItems.filter(i => i.department === currentDept);
+
+    // Validation Queue for Production (Items released by Depts)
+    const itemsPendingValidation = project.items.filter(item =>
+        item.surplusAction === SurplusAction.RELEASED_TO_PROD &&
+        (currentDept === 'PRODUCTION' || currentDept === Department.REGIE)
+    );
 
     const visibleStock = (currentDept === 'PRODUCTION' || currentDept === Department.REGIE)
         ? stockItems
