@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronRight, ArrowRight, LayoutDashboard, ShoppingBag, MessageSquare, ShieldCheck } from 'lucide-react';
+import { LottieAnimation } from './LottieAnimation';
 
 interface OnboardingCarouselProps {
     onComplete: () => void;
@@ -13,25 +14,29 @@ export const OnboardingCarousel: React.FC<OnboardingCarouselProps> = ({ onComple
             icon: LayoutDashboard,
             color: "text-eco-400",
             title: "A Better Set",
-            description: "Une application pour tout le plateau. Faites vos commandes de consommables, suivez les stocks et participez à l'économie circulaire."
+            description: "Une application pour tout le plateau. Faites vos commandes de consommables, suivez les stocks et participez à l'économie circulaire.",
+            animationUrl: "/animations/eco.json"
         },
         {
             icon: ShoppingBag,
             color: "text-yellow-400",
             title: "Point de Revente",
-            description: "Accéder aux reventes des objets déco et costumes, réservez ce qui vous intéresse et récupérez les en fin de tournage !"
+            description: "Accéder aux reventes des objets déco et costumes, réservez ce qui vous intéresse et récupérez les en fin de tournage !",
+            animationUrl: "/animations/shopping.json"
         },
         {
             icon: ShieldCheck,
             color: "text-blue-400",
             title: "Profil Sécurisé",
-            description: "Gardez vos infos (CMB, RIB, Coordonnées) à jour dans un compte unique qui vous suit de production en production."
+            description: "Gardez vos infos (CMB, RIB, Coordonnées) à jour dans un compte unique qui vous suit de production en production.",
+            animationUrl: "/animations/security.json"
         },
         {
             icon: MessageSquare,
             color: "text-pink-400",
             title: "Communication Sécurisée",
-            description: "Échangez avec toute l'équipe de manière sécurisée et partagez vos photos et vidéos de tournage."
+            description: "Échangez avec toute l'équipe de manière sécurisée et partagez vos photos et vidéos de tournage.",
+            animationUrl: "/animations/chat.json"
         }
     ];
 
@@ -51,11 +56,12 @@ export const OnboardingCarousel: React.FC<OnboardingCarouselProps> = ({ onComple
                 {/* Background Glow */}
                 <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-${steps[currentStep].color.replace('text-', '')} to-transparent opacity-50`}></div>
 
-                {/* Icon */}
-                <div className={`mb-6 p-4 rounded-full bg-cinema-900 border border-cinema-700 shadow-xl transform transition-transform duration-500 group-hover:scale-110`}>
-                    {React.createElement(steps[currentStep].icon, {
-                        className: `h-12 w-12 ${steps[currentStep].color}`
-                    })}
+                {/* Animation */}
+                <div className={`mb-6 p-4 rounded-full bg-cinema-900 border border-cinema-700 shadow-xl transform transition-transform duration-500 group-hover:scale-110 flex items-center justify-center`}>
+                    <LottieAnimation
+                        url={steps[currentStep].animationUrl}
+                        className="h-24 w-24"
+                    />
                 </div>
 
                 {/* Text */}
