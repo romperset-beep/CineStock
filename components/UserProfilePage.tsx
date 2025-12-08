@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { UserProfile, Department } from '../types';
 import { Save, Upload, FileText, CheckCircle } from 'lucide-react';
+import { doc, setDoc } from 'firebase/firestore';
+import { db, auth } from '../services/firebase';
 
 export const UserProfilePage: React.FC = () => {
     const { user, userProfiles, updateUserProfile } = useProject();
@@ -50,14 +52,33 @@ export const UserProfilePage: React.FC = () => {
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (user && formData.email) {
-            updateUserProfile({
-                ...formData,
-                id: user.email, // Use email as ID for simplicity
-            } as UserProfile);
-            setIsEditing(false);
+        if (user && auth.currentUser) {
+            try {
+                // Update Firestore
+                const userRef = doc(db, 'users', auth.currentUser.uid);
+
+                // We use setDoc with merge to ensure we don't overwrite other important user fields like project history
+                await setDoc(userRef, {
+                    ...formData,
+                    // Ensure these are split correctly if not present in formData
+                    firstName: formData.firstName || user.name.split(' ')[0],
+                    lastName: formData.lastName || user.name.split(' ').slice(1).join(' ')
+                }, { merge: true });
+
+                // Update local context (optional as onSnapshot should catch it, but good for immediate feedback)
+                updateUserProfile({
+                    ...formData,
+                    id: user.email,
+                } as UserProfile);
+
+                setIsEditing(false);
+                alert("Fiche enregistrée avec succès !");
+            } catch (err) {
+                console.error("Error saving profile:", err);
+                alert("Erreur lors de l'enregistrement.");
+            }
         }
     };
 

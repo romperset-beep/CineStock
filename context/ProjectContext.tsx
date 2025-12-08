@@ -880,20 +880,47 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const profiles: UserProfile[] = [];
       snapshot.forEach((doc) => {
-        const data = doc.data() as User;
-        // Map User to UserProfile structure (simplifying for now)
+        const data = doc.data() as User & Partial<UserProfile>; // Cast to union to access profile fields
+
+        // Map User to UserProfile structure, preserving existing data if present
         profiles.push({
           id: doc.id,
           email: data.email,
-          firstName: data.name.split(' ')[0] || '',
-          lastName: data.name.split(' ').slice(1).join(' ') || '',
+          firstName: data.firstName || data.name.split(' ')[0] || '',
+          lastName: data.lastName || data.name.split(' ').slice(1).join(' ') || '',
           department: data.department,
-          role: 'Membre', // Default
-          // ... filler for other required UserProfile fields ...
-          address: '', postalCode: '', city: '', phone: '', familyStatus: '',
-          ssn: '', birthPlace: '', birthDate: '', birthDepartment: '', birthCountry: '', nationality: '', socialSecurityCenterAddress: '',
-          emergencyContactName: '', emergencyContactPhone: '',
-          isRetired: false, congeSpectacleNumber: '', lastMedicalVisit: ''
+          role: data.role || 'Membre',
+
+          // Personal Info
+          address: data.address || '',
+          postalCode: data.postalCode || '',
+          city: data.city || '',
+          phone: data.phone || '',
+          familyStatus: data.familyStatus || '',
+
+          // Admin Info
+          ssn: data.ssn || '',
+          birthPlace: data.birthPlace || '',
+          birthDate: data.birthDate || '',
+          birthDepartment: data.birthDepartment || '',
+          birthCountry: data.birthCountry || '',
+          nationality: data.nationality || '',
+          socialSecurityCenterAddress: data.socialSecurityCenterAddress || '',
+
+          // Emergency
+          emergencyContactName: data.emergencyContactName || '',
+          emergencyContactPhone: data.emergencyContactPhone || '',
+
+          // Professional
+          isRetired: data.isRetired || false,
+          congeSpectacleNumber: data.congeSpectacleNumber || '',
+          lastMedicalVisit: data.lastMedicalVisit || '',
+
+          // Documents
+          rib: data.rib,
+          cmbCard: data.cmbCard,
+          idCard: data.idCard,
+          drivingLicense: data.drivingLicense
         });
       });
       setUserProfiles(profiles);
