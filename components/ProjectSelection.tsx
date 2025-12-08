@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building2, Film, ArrowRight, Loader2, Plus, LogOut } from 'lucide-react';
+import { Building2, Film, ArrowRight, Loader2, Plus, LogOut, X } from 'lucide-react';
 import { useProject } from '../context/ProjectContext';
 import { LottieAnimation } from './LottieAnimation';
 
@@ -8,7 +8,7 @@ interface ProjectSelectionProps {
 }
 
 export const ProjectSelection: React.FC<ProjectSelectionProps> = ({ onProjectSelected }) => {
-    const { user, logout, joinProject } = useProject();
+    const { user, logout, joinProject, removeProjectFromHistory } = useProject();
     const [isLoading, setIsLoading] = useState(false);
 
     const hasSavedProject = !!(user?.productionName && user?.filmTitle);
@@ -148,7 +148,7 @@ export const ProjectSelection: React.FC<ProjectSelectionProps> = ({ onProjectSel
                                                     setIsLoading(false);
                                                 }
                                             }}
-                                            className="w-full text-left p-3 rounded-lg bg-cinema-700/30 hover:bg-cinema-700 border border-transparent hover:border-cinema-600 transition-all group"
+                                            className="w-full text-left p-3 rounded-lg bg-cinema-700/30 hover:bg-cinema-700 border border-transparent hover:border-cinema-600 transition-all group relative pr-10"
                                         >
                                             <div className="flex justify-between items-center">
                                                 <span className="font-medium text-slate-300 group-hover:text-white truncate">
@@ -159,6 +159,16 @@ export const ProjectSelection: React.FC<ProjectSelectionProps> = ({ onProjectSel
                                             <div className="text-xs text-slate-500 truncate">
                                                 {hist.productionName}
                                             </div>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    removeProjectFromHistory(hist.id);
+                                                }}
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                title="Retirer de l'historique"
+                                            >
+                                                <X className="h-3 w-3" />
+                                            </button>
                                         </button>
                                     ))}
                             </div>

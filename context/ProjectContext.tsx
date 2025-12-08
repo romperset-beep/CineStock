@@ -58,7 +58,8 @@ interface ProjectContextType {
   register: (email: string, pass: string, name: string, dept: Department | 'PRODUCTION') => Promise<void>; // Added
   joinProject: (prod: string, film: string, start?: string, end?: string, type?: string) => Promise<void>;
   leaveProject: () => Promise<void>;
-  deleteProject: (projectId: string) => Promise<void>; // Added
+  deleteProject: (projectId: string) => Promise<void>;
+  removeProjectFromHistory: (projectId: string) => Promise<void>; // Added
   logout: () => void;
 
   // Notifications
@@ -681,6 +682,26 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
+  const removeProjectFromHistory = async (projectId: string) => {
+    if (!auth.currentUser || !user) return;
+
+    try {
+      const currentHistory = user.projectHistory || [];
+      const updatedHistory = currentHistory.filter(p => p.id !== projectId);
+
+      const userRef = doc(db, 'users', auth.currentUser.uid);
+      await updateDoc(userRef, {
+        projectHistory: updatedHistory
+      });
+
+      // Update local state
+      setUser(prev => prev ? ({ ...prev, projectHistory: updatedHistory }) : null);
+
+    } catch (err: any) {
+      console.error("[removeProjectFromHistory] Error:", err);
+      throw err;
+    }
+  };
   const logout = async () => {
     await signOut(auth);
     localStorage.removeItem('cineStockUser'); // Clean legacy
@@ -911,6 +932,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       joinProject,
       leaveProject,
       deleteProject, // Added
+      removeProjectFromHistory, // Added
       addItem,
       updateItem,
       deleteItem,
