@@ -11,8 +11,11 @@ export const ProjectSelection: React.FC<ProjectSelectionProps> = ({ onProjectSel
     const { user, logout, joinProject } = useProject();
     const [isLoading, setIsLoading] = useState(false);
 
-    const hasSavedProject = user?.productionName && user?.filmTitle;
-    const [view, setView] = useState<'choice' | 'form'>(hasSavedProject ? 'choice' : 'form');
+    const hasSavedProject = !!(user?.productionName && user?.filmTitle);
+    const hasHistory = !!(user?.projectHistory && user.projectHistory.length > 0);
+
+    // Default to choice if we have a saved project OR history to show
+    const [view, setView] = useState<'choice' | 'form'>((hasSavedProject || hasHistory) ? 'choice' : 'form');
 
     const [formData, setFormData] = useState({
         productionName: user?.productionName || '',
@@ -62,31 +65,39 @@ export const ProjectSelection: React.FC<ProjectSelectionProps> = ({ onProjectSel
                             />
                         </div>
                         <h2 className="text-2xl font-bold text-white mb-2">
-                            Bon retour, {user?.name ? user.name.split(' ')[0] : 'Cher Membre'} !
+                            {hasSavedProject
+                                ? `Bon retour, ${user?.name ? user.name.split(' ')[0] : 'Cher Membre'} !`
+                                : `Bienvenue, ${user?.name ? user.name.split(' ')[0] : 'Cher Membre'} !`}
                         </h2>
                         <p className="text-slate-400 text-sm">
-                            Voulez-vous reprendre votre travail sur ce projet ?
+                            {hasSavedProject
+                                ? "Voulez-vous reprendre votre travail sur ce projet ?"
+                                : "Sélectionnez un projet récent ou créez-en un nouveau."}
                         </p>
                     </div>
 
                     <div className="space-y-4">
-                        <button
-                            onClick={handleResume}
-                            disabled={isLoading}
-                            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-between px-6 transition-all transform hover:scale-[1.02] group"
-                        >
-                            <div className="text-left">
-                                <span className="block text-xs font-normal text-emerald-200 uppercase tracking-wider">Continuer sur</span>
-                                <span className="text-lg">{user?.filmTitle}</span>
-                            </div>
-                            {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />}
-                        </button>
+                        {hasSavedProject && (
+                            <button
+                                onClick={handleResume}
+                                disabled={isLoading}
+                                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-between px-6 transition-all transform hover:scale-[1.02] group"
+                            >
+                                <div className="text-left">
+                                    <span className="block text-xs font-normal text-emerald-200 uppercase tracking-wider">Continuer sur</span>
+                                    <span className="text-lg">{user?.filmTitle}</span>
+                                </div>
+                                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />}
+                            </button>
+                        )}
 
-                        <div className="relative flex py-2 items-center">
-                            <div className="flex-grow border-t border-cinema-700"></div>
-                            <span className="flex-shrink-0 mx-4 text-gray-500 text-xs uppercase">Ou</span>
-                            <div className="flex-grow border-t border-cinema-700"></div>
-                        </div>
+                        {hasSavedProject && (
+                            <div className="relative flex py-2 items-center">
+                                <div className="flex-grow border-t border-cinema-700"></div>
+                                <span className="flex-shrink-0 mx-4 text-gray-500 text-xs uppercase">Ou</span>
+                                <div className="flex-grow border-t border-cinema-700"></div>
+                            </div>
+                        )}
 
                         <button
                             onClick={() => setView('form')}
@@ -104,14 +115,14 @@ export const ProjectSelection: React.FC<ProjectSelectionProps> = ({ onProjectSel
                         <LogOut className="h-4 w-4" /> Se déconnecter
                     </button>
 
-                    {user?.projectHistory && user.projectHistory.length > 0 && (
+                    {hasHistory && (
                         <div className="mt-8 pt-6 border-t border-cinema-700 animate-in fade-in slide-in-from-bottom-2 delay-300">
                             <h3 className="text-slate-400 text-xs uppercase tracking-wider mb-3 font-semibold">
                                 Récemment consultés
                             </h3>
                             <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
-                                {user.projectHistory
-                                    .filter(p => hasSavedProject ? (p.filmTitle !== user.filmTitle) : true) // Exclude current if relevant
+                                {user?.projectHistory
+                                    ?.filter(p => hasSavedProject ? (p.filmTitle !== user.filmTitle) : true) // Exclude current if relevant
                                     .sort((a, b) => new Date(b.lastAccess).getTime() - new Date(a.lastAccess).getTime())
                                     .map(hist => (
                                         <button
