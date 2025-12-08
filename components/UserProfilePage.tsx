@@ -61,6 +61,43 @@ export const UserProfilePage: React.FC = () => {
         }
     };
 
+    const handleSendEmail = () => {
+        const subject = `Fiche Renseignements - ${formData.lastName} ${formData.firstName} - ${formData.role}`;
+
+        const body = `Bonjour,
+
+Voici ma fiche de renseignements pour la production.
+
+--- INFORMATIONS PERSONNELLES ---
+Nom : ${formData.lastName || ''}
+Prénom : ${formData.firstName || ''}
+Fonction : ${formData.role || ''}
+Tél : ${formData.phone || ''}
+Email : ${formData.email || ''}
+Adresse : ${formData.address || ''}, ${formData.postalCode || ''} ${formData.city || ''}
+Situation Familiale : ${formData.familyStatus || ''}
+
+--- ÉTAT CIVIL ---
+Né(e) le : ${formData.birthDate || ''} à ${formData.birthPlace || ''} (${formData.birthCountry || ''})
+Nationalité : ${formData.nationality || ''}
+Numéro Sécu : ${formData.ssn || ''}
+Adresse Centre Sécu : ${formData.socialSecurityCenterAddress || ''}
+
+--- URGENCE & MÉDICAL ---
+Contact Urgence : ${formData.emergencyContactName || ''}
+Tél Urgence : ${formData.emergencyContactPhone || ''}
+N° Congés Spectacle : ${formData.congeSpectacleNumber || ''}
+Dernière Visite Médicale : ${formData.lastMedicalVisit || ''}
+Retraité : ${formData.isRetired ? 'Oui' : 'Non'}
+
+Note : Les documents (RIB, CNI, etc.) ne peuvent pas être attachés automatiquement. Merci de les joindre si nécessaire.
+
+Cordialement,
+${formData.firstName} ${formData.lastName}`;
+
+        window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    };
+
     if (!user) return <div>Veuillez vous connecter.</div>;
 
     return (
@@ -159,7 +196,21 @@ export const UserProfilePage: React.FC = () => {
                 )}
             </form>
         </div>
-    );
+            
+            {
+        !isEditing && (
+            <div className="flex justify-center pt-8 pb-12">
+                <button
+                    onClick={handleSendEmail}
+                    className="flex items-center gap-3 bg-cinema-700 hover:bg-cinema-600 text-white px-6 py-4 rounded-xl font-bold transition-all hover:scale-105 shadow-xl border border-cinema-600"
+                >
+                    <FileText className="h-5 w-5" />
+                    Envoyer ma fiche par Email
+                </button>
+            </div>
+        )
+    }
+        </div >
 };
 
 const Input = ({ label, className = '', ...props }: any) => (
