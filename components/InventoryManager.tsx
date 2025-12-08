@@ -17,7 +17,7 @@ export const InventoryManager: React.FC = () => {
     const [surplusConfirmation, setSurplusConfirmation] = useState<{ item: any, action: SurplusAction } | null>(null);
 
     // Check shooting end date
-    const shootingEndDate = project.endDate ? new Date(project.endDate) : null;
+    const shootingEndDate = project.shootingEndDate ? new Date(project.shootingEndDate) : null;
     const isShootingFinished = shootingEndDate ? new Date() >= shootingEndDate : false;
 
     // Expense Report State
@@ -707,8 +707,8 @@ export const InventoryManager: React.FC = () => {
                                                                 }}
                                                                 disabled={user?.department !== 'PRODUCTION' && !isShootingFinished}
                                                                 className={`p-2 rounded-lg border transition-all ${user?.department !== 'PRODUCTION' && !isShootingFinished
-                                                                        ? 'border-slate-700 text-slate-600 cursor-not-allowed'
-                                                                        : 'border-cinema-600 text-slate-400 hover:border-blue-500 hover:text-blue-400 hover:bg-blue-500/10'
+                                                                    ? 'border-slate-700 text-slate-600 cursor-not-allowed'
+                                                                    : 'border-cinema-600 text-slate-400 hover:border-blue-500 hover:text-blue-400 hover:bg-blue-500/10'
                                                                     }`}
                                                                 title={user?.department !== 'PRODUCTION'
                                                                     ? (isShootingFinished ? "Libérer pour la Production" : `Disponible le ${shootingEndDate?.toLocaleDateString()}`)
