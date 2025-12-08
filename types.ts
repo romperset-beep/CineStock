@@ -32,6 +32,7 @@ export enum ItemStatus {
 
 export enum SurplusAction {
   NONE = 'En attente',
+  RELEASED_TO_PROD = 'Libéré pour la Prod (Fin Tournage)',
   MARKETPLACE = 'Stock Virtuel (Réemploi)',
   DONATION = 'Don Pédagogique (Écoles)',
   SHORT_FILM = 'Don Court-Métrage'
