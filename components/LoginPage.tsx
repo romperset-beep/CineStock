@@ -87,7 +87,7 @@ export const LoginPage: React.FC = () => {
                     <div className="text-center mb-8 animate-in fade-in slide-in-from-top-4 duration-700">
                         <div className="flex justify-center mb-4">
                             <LottieAnimation
-                                url="https://assets8.lottiefiles.com/packages/lf20_jcikwtux.json"
+                                url="/animations/clapperboard.json"
                                 className="h-32 w-32"
                             />
                         </div>
