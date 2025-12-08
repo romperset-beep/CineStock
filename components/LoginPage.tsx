@@ -85,7 +85,12 @@ export const LoginPage: React.FC = () => {
                 // User needs to Authenticate
                 <div className="flex flex-col items-center w-full">
                     <div className="text-center mb-8 animate-in fade-in slide-in-from-top-4 duration-700">
-                        <img src="/logo.png" alt="A Better Set Logo" className="w-32 h-auto mx-auto mb-4 rounded-full shadow-2xl" />
+                        <div className="flex justify-center mb-4">
+                            <LottieAnimation
+                                url="https://assets8.lottiefiles.com/packages/lf20_jcikwtux.json"
+                                className="h-32 w-32"
+                            />
+                        </div>
                         <h1 className="text-2xl font-bold text-white tracking-tight">A Better Set</h1>
                     </div>
                     <AuthScreen onSuccess={handleAuthSuccess} />
