@@ -187,11 +187,15 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   // Notification State
   const [lastReadSocial, setLastReadSocial] = useState<number>(() => {
     const saved = localStorage.getItem('lastReadSocial');
-    return saved ? Number(saved) : Date.now();
+    const parsed = saved ? Number(saved) : Date.now();
+    const final = isNaN(parsed) ? Date.now() : parsed;
+    console.log("[ProjectContext] Initial lastReadSocial:", final, "Raw:", saved);
+    return final;
   });
   const [lastReadMarketplace, setLastReadMarketplace] = useState<number>(() => {
     const saved = localStorage.getItem('lastReadMarketplace');
-    return saved ? Number(saved) : Date.now();
+    const parsed = saved ? Number(saved) : Date.now();
+    return isNaN(parsed) ? Date.now() : parsed;
   });
 
   const unreadSocialCount = socialPosts.filter(p => {
