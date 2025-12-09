@@ -7,6 +7,7 @@ export const TeamDirectory: React.FC = () => {
     const { userProfiles, currentDept } = useProject();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedDept, setSelectedDept] = useState<string>('ALL');
+    const [selectedProfile, setSelectedProfile] = useState<any>(null); // Added state
 
 
 
@@ -72,7 +73,14 @@ export const TeamDirectory: React.FC = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                             {profiles.map(profile => (
-                                <div key={profile.email} className="bg-cinema-800 rounded-xl border border-cinema-700 p-4 hover:border-blue-500/50 transition-colors group">
+                                <div
+                                    key={profile.email}
+                                    onClick={() => currentDept === 'PRODUCTION' && setSelectedProfile(profile)}
+                                    className={`bg-cinema-800 rounded-xl border border-cinema-700 p-4 transition-all group ${currentDept === 'PRODUCTION'
+                                        ? 'hover:border-blue-500/50 hover:bg-cinema-800/80 cursor-pointer active:scale-[0.99]'
+                                        : ''
+                                        }`}
+                                >
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
                                             <h4 className="font-bold text-white text-lg">{profile.firstName} {profile.lastName}</h4>
@@ -117,12 +125,17 @@ export const TeamDirectory: React.FC = () => {
                     </div>
                 )}
             </div>
+            {selectedProfile && (
+                <ProfileDetailModal profile={selectedProfile} onClose={() => setSelectedProfile(null)} />
+            )}
         </div>
     );
 };
 
+// ... existing DocumentButton ...
 const DocumentButton = ({ label, hasDoc, url }: { label: string, hasDoc: boolean, url?: string }) => {
-    const handleClick = () => {
+    const handleClick = (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent opening modal when clicking document
         if (url) {
             window.open(url, '_blank');
         }
@@ -143,3 +156,77 @@ const DocumentButton = ({ label, hasDoc, url }: { label: string, hasDoc: boolean
         </button>
     );
 };
+
+const ProfileDetailModal = ({ profile, onClose }: { profile: any, onClose: () => void }) => {
+    if (!profile) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
+            <div className="bg-cinema-800 border border-cinema-700 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+                <header className="p-6 border-b border-cinema-700 flex justify-between items-start sticky top-0 bg-cinema-800 z-10">
+                    <div>
+                        <h2 className="text-2xl font-bold text-white">{profile.firstName} {profile.lastName}</h2>
+                        <p className="text-blue-400">{profile.role} • {profile.department}</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-cinema-700 rounded-full transition-colors">
+                        <span className="text-2xl text-slate-400">&times;</span>
+                    </button>
+                </header>
+
+                <div className="p-8 space-y-8">
+                    {/* Personal Info */}
+                    <section>
+                        <h3 className="text-lg font-bold text-eco-400 mb-4 border-b border-cinema-700/50 pb-2">Informations Personnelles</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                            <DetailRow label="Email" value={profile.email} />
+                            <DetailRow label="Téléphone" value={profile.phone} />
+                            <DetailRow label="Adresse" value={`${profile.address || ''} ${profile.postalCode || ''} ${profile.city || ''}`} className="col-span-2" />
+                            <DetailRow label="Situation Familiale" value={profile.familyStatus} />
+                        </div>
+                    </section>
+
+                    {/* Civil Status */}
+                    <section>
+                        <h3 className="text-lg font-bold text-blue-400 mb-4 border-b border-cinema-700/50 pb-2">État Civil & Social</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                            <DetailRow label="Date de Naissance" value={`${profile.birthDate || ''} à ${profile.birthPlace || ''} (${profile.birthCountry || ''})`} />
+                            <DetailRow label="Nationalité" value={profile.nationality} />
+                            <DetailRow label="Numéro Sécu" value={profile.ssn} />
+                            <DetailRow label="Centre Sécu" value={profile.socialSecurityCenterAddress} />
+                        </div>
+                    </section>
+
+                    {/* Emergency */}
+                    <section>
+                        <h3 className="text-lg font-bold text-red-400 mb-4 border-b border-cinema-700/50 pb-2">Urgence & Médical</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                            <DetailRow label="Contact Urgence" value={profile.emergencyContactName} />
+                            <DetailRow label="Tél Urgence" value={profile.emergencyContactPhone} />
+                            <DetailRow label="N° Congés Spectacle" value={profile.congeSpectacleNumber} />
+                            <DetailRow label="Dernière Visite Médicale" value={profile.lastMedicalVisit} />
+                            <DetailRow label="Retraité" value={profile.isRetired ? "Oui" : "Non"} />
+                        </div>
+                    </section>
+
+                    {/* Quick Docs Access */}
+                    <section>
+                        <h3 className="text-lg font-bold text-purple-400 mb-4 border-b border-cinema-700/50 pb-2">Documents</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <DocumentButton label="RIB" hasDoc={!!profile.rib} url={profile.rib} />
+                            <DocumentButton label="CNI" hasDoc={!!profile.idCard} url={profile.idCard} />
+                            <DocumentButton label="CMB" hasDoc={!!profile.cmbCard} url={profile.cmbCard} />
+                            <DocumentButton label="Permis" hasDoc={!!profile.drivingLicense} url={profile.drivingLicense} />
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const DetailRow = ({ label, value, className = '' }: any) => (
+    <div className={className}>
+        <span className="block text-xs font-bold text-slate-500 uppercase">{label}</span>
+        <span className="text-slate-200">{value || '-'}</span>
+    </div>
+);
