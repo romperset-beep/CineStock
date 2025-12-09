@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { UserProfile, Department } from '../types';
-import { Save, Upload, FileText, CheckCircle } from 'lucide-react';
+import { Save, Upload, FileText, CheckCircle, Trash2 } from 'lucide-react';
 import { doc, setDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, auth, storage } from '../services/firebase';
 
 export const UserProfilePage: React.FC = () => {
@@ -61,6 +61,30 @@ export const UserProfilePage: React.FC = () => {
             } catch (error) {
                 console.error("Upload error:", error);
                 alert("Erreur lors de l'upload du document");
+            }
+        }
+    };
+
+    const handleDeleteDocument = async (field: keyof UserProfile) => {
+        if (!confirm("Voulez-vous vraiment supprimer ce document ?")) return;
+
+        // Optimistically remove from UI
+        setFormData(prev => ({
+            ...prev,
+            [field]: '' // Set to empty string to show upload box
+        }));
+
+        // Try to delete from storage if we can parse the URL (optional)
+        // For now, just clearing the reference in the form data is enough for the user,
+        // and the actual deletion from DB happens on "Save".
+        // To be thorough, we could delete the blob if it exists.
+        const fileUrl = formData[field];
+        if (fileUrl && fileUrl.toString().includes('firebase')) {
+            try {
+                const fileRef = ref(storage, fileUrl.toString());
+                await deleteObject(fileRef).catch(e => console.warn("Could not delete from storage", e));
+            } catch (e) {
+                console.warn("Invalid ref", e);
             }
         }
     };
@@ -210,10 +234,10 @@ ${formData.firstName} ${formData.lastName}`;
                 <section className="bg-cinema-800 p-6 rounded-xl border border-cinema-700 space-y-4">
                     <h3 className="text-xl font-bold text-purple-400 border-b border-cinema-700 pb-2">Documents (PDF ou Photo)</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FileUpload label="RIB" field="rib" value={formData.rib} onChange={handleFileUpload} disabled={!isEditing} />
-                        <FileUpload label="Carte Vitale / Attestation CMB" field="cmbCard" value={formData.cmbCard} onChange={handleFileUpload} disabled={!isEditing} />
-                        <FileUpload label="Carte d'Identité" field="idCard" value={formData.idCard} onChange={handleFileUpload} disabled={!isEditing} />
-                        <FileUpload label="Permis de Conduire" field="drivingLicense" value={formData.drivingLicense} onChange={handleFileUpload} disabled={!isEditing} />
+                        <FileUpload label="RIB" field="rib" value={formData.rib} onChange={handleFileUpload} onDelete={handleDeleteDocument} disabled={!isEditing} />
+                        <FileUpload label="Carte Vitale / Attestation CMB" field="cmbCard" value={formData.cmbCard} onChange={handleFileUpload} onDelete={handleDeleteDocument} disabled={!isEditing} />
+                        <FileUpload label="Carte d'Identité" field="idCard" value={formData.idCard} onChange={handleFileUpload} onDelete={handleDeleteDocument} disabled={!isEditing} />
+                        <FileUpload label="Permis de Conduire" field="drivingLicense" value={formData.drivingLicense} onChange={handleFileUpload} onDelete={handleDeleteDocument} disabled={!isEditing} />
                     </div>
                 </section>
 
@@ -253,7 +277,7 @@ const Input = ({ label, className = '', ...props }: any) => (
     </div>
 );
 
-const FileUpload = ({ label, field, value, onChange, disabled }: any) => (
+const FileUpload = ({ label, field, value, onChange, onDelete, disabled }: any) => (
     <div className="bg-cinema-900/50 p-4 rounded-lg border border-cinema-700 border-dashed">
         <label className="block text-sm font-bold text-slate-300 mb-2">{label}</label>
         {value ? (
@@ -265,10 +289,11 @@ const FileUpload = ({ label, field, value, onChange, disabled }: any) => (
                 {!disabled && (
                     <button
                         type="button"
-                        onClick={() => {/* Logic to clear would go here */ }}
-                        className="text-xs text-red-400 hover:underline"
+                        onClick={() => onDelete && onDelete(field)}
+                        className="text-xs text-red-500 hover:text-red-400 hover:bg-red-500/10 p-2 rounded transition-colors"
+                        title="Supprimer le document"
                     >
-                        Remplacer
+                        <Trash2 className="h-4 w-4" />
                     </button>
                 )}
             </div>
