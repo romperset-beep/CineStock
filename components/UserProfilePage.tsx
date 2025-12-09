@@ -3,7 +3,8 @@ import { useProject } from '../context/ProjectContext';
 import { UserProfile, Department } from '../types';
 import { Save, Upload, FileText, CheckCircle } from 'lucide-react';
 import { doc, setDoc } from 'firebase/firestore';
-import { db, auth } from '../services/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, auth, storage } from '../services/firebase';
 
 export const UserProfilePage: React.FC = () => {
     const { user, userProfiles, updateUserProfile } = useProject();
@@ -38,17 +39,29 @@ export const UserProfilePage: React.FC = () => {
         }));
     };
 
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, field: keyof UserProfile) => {
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: keyof UserProfile) => {
         const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
+        if (file && user && auth.currentUser) {
+            try {
+                // visual feedback
+                const btn = e.target.parentElement;
+                if (btn) btn.style.opacity = '0.5';
+
+                const storageRef = ref(storage, `users/${auth.currentUser.uid}/documents/${field}_${Date.now()}_${file.name}`);
+                const snapshot = await uploadBytes(storageRef, file);
+                const downloadURL = await getDownloadURL(snapshot.ref);
+
                 setFormData(prev => ({
                     ...prev,
-                    [field]: reader.result as string
+                    [field]: downloadURL
                 }));
-            };
-            reader.readAsDataURL(file);
+
+                // restore
+                if (btn) btn.style.opacity = '1';
+            } catch (error) {
+                console.error("Upload error:", error);
+                alert("Erreur lors de l'upload du document");
+            }
         }
     };
 
