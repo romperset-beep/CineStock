@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { Department } from '../types';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { FileText, Upload, Calendar, Download, Trash2, Eye } from 'lucide-react';
+import { FileText, Upload, Calendar, Download, Eye } from 'lucide-react';
 
 const STORAGE_BUCKET = 'callsheets';
 
