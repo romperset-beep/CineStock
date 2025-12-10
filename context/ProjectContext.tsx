@@ -126,7 +126,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   // Persist user in localStorage for better DX
   const [user, setUser] = useState<User | null>(() => {
     try {
-      const saved = localStorage.getItem('cineStockUser');
+      const saved = localStorage.getItem('aBetterSetUser');
       return saved ? JSON.parse(saved) : null;
     } catch (e) {
       console.error("Failed to parse user from local storage", e);
@@ -796,7 +796,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
   const logout = async () => {
     await signOut(auth);
-    localStorage.removeItem('cineStockUser'); // Clean legacy
+    localStorage.removeItem('aBetterSetUser'); // Clean legacy
     setCurrentDept('PRODUCTION');
     setProject(DEFAULT_PROJECT);
   };
