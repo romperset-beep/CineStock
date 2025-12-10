@@ -340,6 +340,42 @@ export const ImpactReport: React.FC = () => {
                             </table>
                         </div>
                     </div>
+
+                    {/* Virtual Stock / Recoverable Items Section */}
+                    {project.items.some(i => i.surplusAction === SurplusAction.MARKETPLACE) && (
+                        <div className="bg-gradient-to-br from-cyan-900/20 to-cinema-800 rounded-xl border border-cyan-700/50 overflow-hidden col-span-full mt-6">
+                            <div className="bg-cyan-900/30 px-6 py-4 border-b border-cyan-700/50 flex items-center justify-between">
+                                <h3 className="text-lg font-bold text-cyan-100 flex items-center gap-2">
+                                    <Share2 className="h-5 w-5 text-cyan-400" />
+                                    Stock Virtuel & Réemploi
+                                </h3>
+                                <span className="text-xs font-bold bg-cyan-500/20 text-cyan-300 px-3 py-1 rounded-full border border-cyan-500/30">
+                                    Récupérable pour un prochain projet
+                                </span>
+                            </div>
+                            <div className="p-6">
+                                <p className="text-sm text-cyan-200/80 mb-4">
+                                    Les éléments suivants ont été identifiés comme "Stock Virtuel". Ils sont stockés numériquement et peuvent être réutilisés directement sur une nouvelle production, évitant ainsi de nouveaux achats et réduisant l'empreinte carbone.
+                                </p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                    {project.items
+                                        .filter(i => i.surplusAction === SurplusAction.MARKETPLACE)
+                                        .map(item => (
+                                            <div key={item.id} className="bg-cinema-900/50 border border-cinema-700 p-3 rounded-lg flex justify-between items-center group hover:border-cyan-500/50 transition-colors">
+                                                <div>
+                                                    <div className="font-medium text-white">{item.name}</div>
+                                                    <div className="text-xs text-slate-500">{item.department}</div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-cyan-400 font-bold">{item.quantityCurrent} {item.unit}</div>
+                                                    <div className="text-[10px] text-slate-600 uppercase">Dispo</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
