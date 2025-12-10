@@ -237,9 +237,9 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
         setIsSubmitting(true);
 
         // Determine final department:
-        // Use the selected department from the dropdown. 
-        // This allows Production to order for specific departments and ensures catalog consistency.
-        const finalDepartment = selectedDept;
+        // If current user is NOT Production, they can ONLY order for their own department.
+        // The dropdown might be used for browsing other catalogs (via selectedDept), but the order acts as a "Purchase for ME".
+        const finalDepartment = currentDept !== 'PRODUCTION' ? (currentDept as Department) : selectedDept;
 
         const newItem: ConsumableItem = {
             id: Math.random().toString(36).substr(2, 9), // Will be ignored by addItem
