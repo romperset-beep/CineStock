@@ -184,6 +184,7 @@ export interface User {
   startDate?: string;
   endDate?: string;
   projectType?: string; // Added to User to persist selection across sessions
+  currentProjectId?: string; // Added for robust syncing
   projectHistory?: ProjectSummary[];
 }
 

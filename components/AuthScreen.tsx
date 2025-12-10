@@ -52,14 +52,36 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess }) => {
     return (
         <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="bg-cinema-800 border border-cinema-700 p-8 rounded-2xl shadow-2xl relative z-10">
+
+                {/* Tabs Switcher */}
+                <div className="flex p-1 bg-cinema-900/50 rounded-xl mb-8 border border-cinema-700">
+                    <button
+                        type="button"
+                        onClick={() => setIsSignUp(false)}
+                        className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 ${!isSignUp
+                                ? 'bg-eco-600 text-white shadow-lg shadow-eco-900/20'
+                                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                            }`}
+                    >
+                        Se connecter
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setIsSignUp(true)}
+                        className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 ${isSignUp
+                                ? 'bg-eco-600 text-white shadow-lg shadow-eco-900/20'
+                                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                            }`}
+                    >
+                        Créer un compte
+                    </button>
+                </div>
+
                 <div className="text-center mb-6">
-                    <h2 className="text-2xl font-bold text-white mb-2">
-                        {isSignUp ? "Créer un compte" : "Bon retour parmi nous !"}
-                    </h2>
                     <p className="text-slate-400 text-sm">
                         {isSignUp
                             ? "Rejoignez la communauté A Better Set"
-                            : "Connectez-vous pour accéder à vos projets"}
+                            : "Accédez à vos projets en cours"}
                     </p>
                 </div>
 
@@ -161,17 +183,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess }) => {
                         )}
                     </button>
                 </form>
-
-                <div className="mt-6 text-center">
-                    <button
-                        onClick={() => setIsSignUp(!isSignUp)}
-                        className="text-slate-400 hover:text-white text-sm transition-colors border-b border-dashed border-slate-600 hover:border-white pb-0.5"
-                    >
-                        {isSignUp
-                            ? "Déjà un compte ? Connectez-vous"
-                            : "Nouveau sur A Better Set ? Créer un compte"}
-                    </button>
-                </div>
             </div>
         </div>
     );

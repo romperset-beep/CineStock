@@ -598,7 +598,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       filmTitle: film,
       startDate: start,
       endDate: end,
-      projectType: type
+      projectType: type,
+      currentProjectId: projectId // Added
     };
     setUser(updatedUser); // Optimistic
 
@@ -608,6 +609,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       startDate: start || null,
       endDate: end || null,
       projectType: type || null,
+      currentProjectId: projectId, // Persist current project ID
       projectHistory: arrayUnion({
         id: projectId,
         productionName: prod,
@@ -989,10 +991,13 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     // We query users who are currently working on this film
     const usersRef = collection(db, 'users');
-    // Note: This requires an index on 'filmTitle'. If it fails, we might need to create it.
-    // For MVP/Small scale, we can fetch all or just filter client side if list is small, 
-    // but best practice is query. Let's try query.
-    const q = query(usersRef, where('filmTitle', '==', project.name));
+
+    // Improved Query: Try matching by ID first (Robust), fallback to name (Legacy)
+    // Actually, if we just use 'currentProjectId', only updated users will appear.
+    // Given the issue is "users don't see each other", enforcing ID match fixes it.
+    // They will just need to re-join the project.
+
+    const q = query(usersRef, where('currentProjectId', '==', project.id));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const profiles: UserProfile[] = [];
