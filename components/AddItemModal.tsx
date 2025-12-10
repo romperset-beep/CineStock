@@ -132,6 +132,33 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
         return Array.from(itemMap.values()).sort((a, b) => a.localeCompare(b));
     }, [project.items, catalogItems]);
 
+    // Get suggestions for current department catalog with deduplication
+    const catalogItemsList = useMemo(() => {
+        const itemMap = new Map<string, string>();
+        const addToMap = (name: string) => {
+            if (!name) return;
+            const key = name.trim().toLowerCase();
+            if (!itemMap.has(key)) {
+                itemMap.set(key, name.trim());
+            }
+        };
+
+        // 1. Base Catalog
+        (POPULAR_ITEMS[selectedDept] || []).forEach(addToMap);
+
+        // 2. Global Catalog Items for this dept
+        catalogItems
+            .filter(item => item.department === selectedDept)
+            .forEach(item => addToMap(item.name));
+
+        // 3. History Items for this dept
+        project.items
+            .filter(item => item.department === selectedDept)
+            .forEach(item => addToMap(item.name));
+
+        return Array.from(itemMap.values()).sort((a, b) => a.localeCompare(b));
+    }, [selectedDept, project.items, catalogItems]);
+
     // Filter suggestions when typing
     useEffect(() => {
         if (!newItemName || newItemName.length < 2) {
@@ -262,32 +289,6 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
         setIsCatalogOpen(false);
     };
 
-    // Get suggestions for current department catalog with deduplication
-    const catalogItemsList = useMemo(() => {
-        const itemMap = new Map<string, string>();
-        const addToMap = (name: string) => {
-            if (!name) return;
-            const key = name.trim().toLowerCase();
-            if (!itemMap.has(key)) {
-                itemMap.set(key, name.trim());
-            }
-        };
-
-        // 1. Base Catalog
-        (POPULAR_ITEMS[selectedDept] || []).forEach(addToMap);
-
-        // 2. Global Catalog Items for this dept
-        catalogItems
-            .filter(item => item.department === selectedDept)
-            .forEach(item => addToMap(item.name));
-
-        // 3. History Items for this dept
-        project.items
-            .filter(item => item.department === selectedDept)
-            .forEach(item => addToMap(item.name));
-
-        return Array.from(itemMap.values()).sort((a, b) => a.localeCompare(b));
-    }, [selectedDept, project.items, catalogItems]);
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
