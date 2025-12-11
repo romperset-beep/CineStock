@@ -95,6 +95,13 @@ export const ExpenseReportModal: React.FC<ExpenseReportModalProps> = ({ isOpen, 
                 // Update file reference to the compressed one (valid for upload)
                 setFile(fileToProcess);
 
+                // SAFETY GUARD: If file is still > 1MB, skip AI to prevent crash
+                if (fileToProcess.size > 1024 * 1024) {
+                    setIsAnalyzing(false);
+                    setError("Image trop lourde pour l'IA, saisie manuelle requise.");
+                    return;
+                }
+
                 // Analyze
                 const result = await analyzeReceipt(fileToProcess);
                 if (result.data) {

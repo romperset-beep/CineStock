@@ -5,7 +5,7 @@
  * @param quality The compression quality from 0 to 1 (default 0.6).
  * @returns A Promise resolving to the compressed File object.
  */
-export const compressImage = async (file: File, maxWidth = 1024, quality = 0.6): Promise<File> => {
+export const compressImage = async (file: File, maxWidth = 800, quality = 0.6): Promise<File> => {
     // If not an image, return original
     if (!file.type.startsWith('image/')) {
         return file;
