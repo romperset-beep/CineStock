@@ -1,6 +1,6 @@
 import React from 'react';
 import { Department, SurplusAction } from '../types';
-import { Users, RefreshCw, GraduationCap, ShoppingBag, MessageSquare, Film, Calendar, FileText } from 'lucide-react';
+import { Users, RefreshCw, GraduationCap, ShoppingBag, MessageSquare, Film, Calendar, FileText, Receipt } from 'lucide-react';
 import { useProject } from '../context/ProjectContext';
 
 interface ProjectManagerProps {
@@ -11,7 +11,7 @@ interface ProjectManagerProps {
 export const ProjectManager: React.FC<ProjectManagerProps> = ({
     setActiveTab,
 }) => {
-    const { project, setProject, updateProjectDetails, currentDept, setCurrentDept, setCircularView, buyBackItems, socialPosts, unreadSocialCount, userProfiles, user, t, error, testConnection, debugStatus, lastLog } = useProject();
+    const { project, setProject, updateProjectDetails, currentDept, setCurrentDept, setCircularView, buyBackItems, socialPosts, unreadSocialCount, userProfiles, user, t, error, testConnection, debugStatus, lastLog, expenseReports } = useProject();
 
     // Filter items based on current view (Department vs Production)
     const filteredItems = currentDept === 'PRODUCTION'
@@ -49,6 +49,7 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({
 
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* 1. Mon Stock */}
                 <button
                     onClick={() => setActiveTab && setActiveTab('inventory')}
                     className="bg-gradient-to-br from-eco-600 to-eco-800 p-6 rounded-xl text-white shadow-lg text-left hover:scale-[1.02] transition-transform"
@@ -60,33 +61,37 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({
                     <p className="text-xs mt-2 opacity-70">Cliquez pour voir l'inventaire</p>
                 </button>
 
+                {/* 2. Feuilles de Service */}
+                <button
+                    onClick={() => setActiveTab && setActiveTab('callsheets')}
+                    className="bg-cinema-800 p-6 rounded-xl text-white shadow-lg border border-cinema-700 text-left hover:bg-cinema-700 transition-colors group"
+                >
+                    <div className="flex justify-between items-start">
+                        <h3 className="text-lg font-semibold opacity-70">Feuilles de Service</h3>
+                        <FileText className="h-6 w-6 text-blue-300 group-hover:scale-110 transition-transform" />
+                    </div>
+                    <p className="text-4xl font-bold mt-2 text-blue-300">
+                        <span className="text-2xl">PDF</span>
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1">Planning journalier</p>
+                </button>
 
+                {/* 3. Note de Frais (NEW) */}
                 <button
-                    onClick={() => setActiveTab && setActiveTab('buyback')}
+                    onClick={() => setActiveTab && setActiveTab('expenses')}
                     className="bg-cinema-800 p-6 rounded-xl text-white shadow-lg border border-cinema-700 text-left hover:bg-cinema-700 transition-colors group"
                 >
                     <div className="flex justify-between items-start">
-                        <h3 className="text-lg font-semibold opacity-70">À Racheter</h3>
-                        <ShoppingBag className="h-6 w-6 text-yellow-400 group-hover:scale-110 transition-transform" />
+                        <h3 className="text-lg font-semibold opacity-70">Note de Frais</h3>
+                        <Receipt className="h-6 w-6 text-purple-400 group-hover:scale-110 transition-transform" />
                     </div>
-                    <p className="text-4xl font-bold mt-2 text-yellow-400">
-                        {buyBackItems?.filter(i => i.status === 'AVAILABLE').length || 0}
+                    <p className="text-4xl font-bold mt-2 text-purple-400">
+                        {expenseReports?.length || 0}
                     </p>
-                    <p className="text-xs text-slate-400 mt-1">Zone de réemploi interne</p>
+                    <p className="text-xs text-slate-400 mt-1">Justificatifs & Remboursements</p>
                 </button>
-                <button
-                    onClick={() => setActiveTab && setActiveTab('social')}
-                    className="bg-cinema-800 p-6 rounded-xl text-white shadow-lg border border-cinema-700 text-left hover:bg-cinema-700 transition-colors group"
-                >
-                    <div className="flex justify-between items-start">
-                        <h3 className="text-lg font-semibold opacity-70">Mur Social</h3>
-                        <MessageSquare className="h-6 w-6 text-pink-500 group-hover:scale-110 transition-transform" />
-                    </div>
-                    <p className="text-4xl font-bold mt-2 text-pink-500">
-                        {unreadSocialCount}
-                    </p>
-                    <p className="text-xs text-slate-400 mt-1">Nouveaux messages</p>
-                </button>
+
+                {/* 4. Équipe */}
                 {currentDept === 'PRODUCTION' && (
                     <button
                         onClick={() => setActiveTab && setActiveTab('team')}
@@ -103,22 +108,35 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({
                     </button>
                 )}
 
+                {/* 5. À Racheter */}
                 <button
-                    onClick={() => setActiveTab && setActiveTab('callsheets')}
+                    onClick={() => setActiveTab && setActiveTab('buyback')}
                     className="bg-cinema-800 p-6 rounded-xl text-white shadow-lg border border-cinema-700 text-left hover:bg-cinema-700 transition-colors group"
                 >
                     <div className="flex justify-between items-start">
-                        <h3 className="text-lg font-semibold opacity-70">Feuilles de Service</h3>
-                        <FileText className="h-6 w-6 text-blue-300 group-hover:scale-110 transition-transform" />
+                        <h3 className="text-lg font-semibold opacity-70">À Racheter</h3>
+                        <ShoppingBag className="h-6 w-6 text-yellow-400 group-hover:scale-110 transition-transform" />
                     </div>
-                    <p className="text-4xl font-bold mt-2 text-blue-300">
-                        {/* We could show count here if available in context, otherwise just ellipsis or icon */}
-                        <span className="text-2xl">PDF</span>
+                    <p className="text-4xl font-bold mt-2 text-yellow-400">
+                        {buyBackItems?.filter(i => i.status === 'AVAILABLE').length || 0}
                     </p>
-                    <p className="text-xs text-slate-400 mt-1">Planning journalier</p>
+                    <p className="text-xs text-slate-400 mt-1">Zone de réemploi interne</p>
                 </button>
 
-
+                {/* 6. Mur Social */}
+                <button
+                    onClick={() => setActiveTab && setActiveTab('social')}
+                    className="bg-cinema-800 p-6 rounded-xl text-white shadow-lg border border-cinema-700 text-left hover:bg-cinema-700 transition-colors group"
+                >
+                    <div className="flex justify-between items-start">
+                        <h3 className="text-lg font-semibold opacity-70">Mur Social</h3>
+                        <MessageSquare className="h-6 w-6 text-pink-500 group-hover:scale-110 transition-transform" />
+                    </div>
+                    <p className="text-4xl font-bold mt-2 text-pink-500">
+                        {unreadSocialCount}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1">Nouveaux messages</p>
+                </button>
 
             </div>
 
