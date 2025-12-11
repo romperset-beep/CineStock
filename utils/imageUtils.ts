@@ -12,11 +12,12 @@ export const compressImage = async (file: File, maxWidth = 800, quality = 0.6): 
     }
 
     const compress = async (w: number, q: number): Promise<File> => {
+        let canvas: HTMLCanvasElement | null = null;
         try {
             // Advanced method: createImageBitmap (Very fast, low memory)
             if (typeof createImageBitmap !== 'undefined') {
                 const bitmap = await createImageBitmap(file);
-                const elem = document.createElement('canvas');
+                canvas = document.createElement('canvas');
 
                 let width = bitmap.width;
                 let height = bitmap.height;
@@ -34,16 +35,16 @@ export const compressImage = async (file: File, maxWidth = 800, quality = 0.6): 
                     }
                 }
 
-                elem.width = width;
-                elem.height = height;
+                canvas.width = width;
+                canvas.height = height;
 
-                const ctx = elem.getContext('2d');
+                const ctx = canvas.getContext('2d');
                 if (ctx) {
                     ctx.drawImage(bitmap, 0, 0, width, height);
                     bitmap.close(); // Important: Release memory immediately
 
                     return new Promise((resolve) => {
-                        ctx.canvas.toBlob((blob) => {
+                        canvas!.toBlob((blob) => {
                             if (!blob) {
                                 resolve(file);
                                 return;
@@ -59,6 +60,13 @@ export const compressImage = async (file: File, maxWidth = 800, quality = 0.6): 
             }
         } catch (e) {
             console.warn("createImageBitmap failed, falling back to legacy method", e);
+        } finally {
+            // Explicit cleanup
+            if (canvas) {
+                canvas.width = 0;
+                canvas.height = 0;
+                canvas = null;
+            }
         }
 
         // Legacy Fallback (Slower, higher memory usage but compatible)
@@ -95,6 +103,10 @@ export const compressImage = async (file: File, maxWidth = 800, quality = 0.6): 
                 ctx.drawImage(img, 0, 0, width, height);
 
                 ctx.canvas.toBlob((blob) => {
+                    // Cleanup inside callback
+                    elem.width = 0;
+                    elem.height = 0;
+
                     if (!blob) {
                         resolve(file);
                         return;
@@ -109,7 +121,6 @@ export const compressImage = async (file: File, maxWidth = 800, quality = 0.6): 
 
             img.onerror = (err) => {
                 URL.revokeObjectURL(objectUrl);
-                // If even this fails, return original file
                 resolve(file);
             };
 
@@ -117,20 +128,28 @@ export const compressImage = async (file: File, maxWidth = 800, quality = 0.6): 
         });
     };
 
-    // First Pass
-    let compressed = await compress(maxWidth, quality);
+    // Pre-downscaling for huge files (>2MB) to prevent immediate OOM
+    let targetWidth = maxWidth;
+    let targetQuality = quality;
 
-    // Recursive Aggressive Compression if still > 1MB
-    if (compressed.size > 1024 * 1024) {
-        console.warn(`Compressed image still too large (${(compressed.size / 1024 / 1024).toFixed(2)}MB). Retrying with aggressive settings...`);
-        // Try 600px and 0.5 quality
-        compressed = await compress(600, 0.5);
+    if (file.size > 2 * 1024 * 1024) {
+        console.log("File > 2MB, applying aggressive pre-scaling");
+        targetWidth = Math.min(maxWidth, 1280); // Cap at 1280px max for first pass
+        targetQuality = Math.min(quality, 0.5);
     }
 
-    if (compressed.size > 1024 * 1024) {
-        console.warn(`Compressed image STILL too large (${(compressed.size / 1024 / 1024).toFixed(2)}MB). Last resort...`);
-        // Last resort: 400px, 0.4 quality
-        compressed = await compress(400, 0.4);
+    // First Pass
+    let compressed = await compress(targetWidth, targetQuality);
+
+    // Iterative Aggressive Compression if still > 1MB (Max 3 attempts)
+    let attempts = 0;
+    while (compressed.size > 1024 * 1024 && attempts < 3) {
+        attempts++;
+        targetWidth = Math.floor(targetWidth * 0.7); // Reduce size by 30% each time
+        targetQuality = Math.max(0.4, targetQuality - 0.1); // Reduce quality
+
+        console.log(`[Compression] Retry ${attempts}: ${targetWidth}px, Q:${targetQuality.toFixed(1)}`);
+        compressed = await compress(targetWidth, targetQuality);
     }
 
     return compressed;
