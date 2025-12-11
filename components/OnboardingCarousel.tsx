@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronRight, ArrowRight, LayoutDashboard, ShoppingBag, MessageSquare, ShieldCheck } from 'lucide-react';
+import { ChevronRight, ArrowRight, LayoutDashboard } from 'lucide-react';
 import { LottieAnimation } from './LottieAnimation';
 import { Language } from '../types';
 
@@ -17,18 +17,6 @@ const translations = {
             {
                 title: "A Better Set",
                 description: "Une application pour tout le plateau. Faites vos commandes de consommables, suivez les stocks et participez à l'économie circulaire."
-            },
-            {
-                title: "Point de Revente",
-                description: "Accéder aux reventes des objets déco et costumes, réservez ce qui vous intéresse et récupérez les en fin de tournage !"
-            },
-            {
-                title: "Profil Sécurisé",
-                description: "Gardez vos infos (CMB, RIB, Coordonnées) à jour dans un compte unique qui vous suit de production en production."
-            },
-            {
-                title: "Communication Sécurisée",
-                description: "Échangez avec toute l'équipe de manière sécurisée et partagez vos photos et vidéos de tournage."
             }
         ]
     },
@@ -40,18 +28,6 @@ const translations = {
             {
                 title: "A Better Set",
                 description: "One app for the entire set. Order consumables, track inventory, and participate in the circular economy."
-            },
-            {
-                title: "Resale Point",
-                description: "Access decoration and costume resales, reserve what interests you, and pick it up at the end of the shoot!"
-            },
-            {
-                title: "Secure Profile",
-                description: "Keep your info (Docs, Bank, Contacts) up to date in a unique account that follows you from production to production."
-            },
-            {
-                title: "Secure Communication",
-                description: "Chat securely with the whole team and share your production photos and videos."
             }
         ]
     },
@@ -63,18 +39,6 @@ const translations = {
             {
                 title: "A Better Set",
                 description: "Una aplicación para todo el set. Pide consumibles, sigue el inventario y participa en la economía circular."
-            },
-            {
-                title: "Punto de Reventa",
-                description: "¡Accede a la reventa de decoración y vestuario, reserva lo que te interese y recógelo al final del rodaje!"
-            },
-            {
-                title: "Perfil Seguro",
-                description: "Mantén tus datos (Documentos, Banco, Contactos) actualizados en una cuenta única que te sigue de producción en producción."
-            },
-            {
-                title: "Comunicación Segura",
-                description: "Chatea de forma segura con todo el equipo y comparte tus fotos y videos del rodaje."
             }
         ]
     }
@@ -91,27 +55,6 @@ export const OnboardingCarousel: React.FC<OnboardingCarouselProps> = ({ onComple
             title: t.steps[0].title,
             description: t.steps[0].description,
             animationUrl: "/animations/eco.json"
-        },
-        {
-            icon: ShoppingBag,
-            color: "text-yellow-400",
-            title: t.steps[1].title,
-            description: t.steps[1].description,
-            animationUrl: "/animations/shopping.json"
-        },
-        {
-            icon: ShieldCheck,
-            color: "text-blue-400",
-            title: t.steps[2].title,
-            description: t.steps[2].description,
-            animationUrl: "/animations/security.json"
-        },
-        {
-            icon: MessageSquare,
-            color: "text-pink-400",
-            title: t.steps[3].title,
-            description: t.steps[3].description,
-            animationUrl: "/animations/chat.json"
         }
     ];
 
