@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useProject } from '../context/ProjectContext';
-import { MessageSquare, Image as ImageIcon, Send, Heart, User, Clock, Trash2, Users, Lock, ChevronDown } from 'lucide-react'; // Added icons
-import { SocialPost, Department } from '../types'; // Added Department
+import { MessageSquare, Image as ImageIcon, Send, Heart, User, Clock, Trash2, Users, Lock, ChevronDown } from 'lucide-react';
+import { SocialPost, Department } from '../types';
 
 export const SocialFeed: React.FC = () => {
-    const { socialPosts, addSocialPost, deleteSocialPost, user, userProfiles, markSocialAsRead } = useProject(); // Added deleteSocialPost
+    const { socialPosts, addSocialPost, deleteSocialPost, user, userProfiles, markSocialAsRead } = useProject();
 
     // Mark as read when entering the feed
     useEffect(() => {
@@ -18,11 +18,103 @@ export const SocialFeed: React.FC = () => {
     const [targetAudience, setTargetAudience] = useState<'GLOBAL' | 'DEPARTMENT' | 'USER'>('GLOBAL');
     const [targetDept, setTargetDept] = useState<Department | 'PRODUCTION'>('PRODUCTION');
     const [targetUserId, setTargetUserId] = useState<string>('');
-    const [searchTerm, setSearchTerm] = useState(''); // Added for search input
+    const [searchTerm, setSearchTerm] = useState('');
     const [showSuggestions, setShowSuggestions] = useState(false);
 
-    const [showGallery, setShowGallery] = useState(false); // Toggle for Gallery Mode
-    const [showRecentDiscussions, setShowRecentDiscussions] = useState(false); // Toggle for Recent Discussions
+    const [showGallery, setShowGallery] = useState(false);
+    const [showRecentDiscussions, setShowRecentDiscussions] = useState(false);
+
+    // Translations
+    const { language } = useProject();
+    const t = {
+        fr: {
+            myDiscussions: "Mes Discussions",
+            socialWall: "Mur Social",
+            viewGallery: "Voir la galerie photo",
+            viewDiscussion: "Voir la discussion",
+            theWall: "Le Mur",
+            photos: "Les Photos",
+            resumeDiscussion: "Reprendre une discussion récente",
+            noRecent: "Aucune conversation privée récente.",
+            backGlobal: "Retour au Mur Global",
+            galleryMode: "Mode Galerie : {count} photo(s)",
+            shareMoments: "Partagez des photos, des infos et des moments de vie du tournage.",
+            global: "🌏 Toute l'équipe",
+            department: "🏢 Un Département",
+            user: "👤 Une Personne",
+            production: "Production",
+            searchUser: "Rechercher une personne...",
+            noResult: "Aucun résultat",
+            placeholder: "Quoi de neuf, {name} ?",
+            processing: "Traitement de l'image en cours...",
+            addPhoto: "Ajouter une photo",
+            privateMsg: "Message Privé",
+            publish: "Publier",
+            noPhotos: "Aucune photo dans cette conversation.",
+            noMessages: "Aucun message pour le moment. Soyez le premier à publier !",
+            unknownUser: "Utilisateur Inconnu",
+            lastMsg: "Dernier msg",
+            deleteConfirm: "Supprimer ce message ?"
+        },
+        en: {
+            myDiscussions: "My Discussions",
+            socialWall: "Social Wall",
+            viewGallery: "View Photo Gallery",
+            viewDiscussion: "View Discussion",
+            theWall: "The Wall",
+            photos: "Photos",
+            resumeDiscussion: "Resume recent discussion",
+            noRecent: "No recent private conversation.",
+            backGlobal: "Back to Global Wall",
+            galleryMode: "Gallery Mode: {count} photo(s)",
+            shareMoments: "Share photos, info, and life moments from the set.",
+            global: "🌏 Everyone",
+            department: "🏢 A Department",
+            user: "👤 A Person",
+            production: "Production",
+            searchUser: "Search for a person...",
+            noResult: "No result",
+            placeholder: "What's up, {name}?",
+            processing: "Processing image...",
+            addPhoto: "Add a photo",
+            privateMsg: "Private Message",
+            publish: "Post",
+            noPhotos: "No photos in this conversation.",
+            noMessages: "No messages yet. Be the first to post!",
+            unknownUser: "Unknown User",
+            lastMsg: "Last msg",
+            deleteConfirm: "Delete this message?"
+        },
+        es: {
+            myDiscussions: "Mis Discusiones",
+            socialWall: "Muro Social",
+            viewGallery: "Ver Galería de Fotos",
+            viewDiscussion: "Ver Discusión",
+            theWall: "El Muro",
+            photos: "Fotos",
+            resumeDiscussion: "Reanudar discusión reciente",
+            noRecent: "Ninguna conversación privada reciente.",
+            backGlobal: "Volver al Muro Global",
+            galleryMode: "Modo Galería: {count} foto(s)",
+            shareMoments: "Comparte fotos, info y momentos de vida del rodaje.",
+            global: "🌏 Todo el equipo",
+            department: "🏢 Un Departamento",
+            user: "👤 Una Persona",
+            production: "Producción",
+            searchUser: "Buscar una persona...",
+            noResult: "Ningún resultado",
+            placeholder: "¿Qué tal, {name}?",
+            processing: "Procesando imagen...",
+            addPhoto: "Añadir una foto",
+            privateMsg: "Mensaje Privado",
+            publish: "Publicar",
+            noPhotos: "Ninguna foto en esta conversación.",
+            noMessages: "Ningún mensaje por el momento. ¡Sé el primero en publicar!",
+            unknownUser: "Usuario Desconocido",
+            lastMsg: "Último msj",
+            deleteConfirm: "¿Eliminar este mensaje?"
+        }
+    }[language || 'fr'];
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -32,8 +124,6 @@ export const SocialFeed: React.FC = () => {
 
     if (myProfile) {
         const processedIds = new Set<string>();
-
-        // Sort posts by date desc first
         const sortedPosts = [...socialPosts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
         sortedPosts.forEach(post => {
@@ -41,18 +131,14 @@ export const SocialFeed: React.FC = () => {
                 let partnerId = '';
                 let partnerName = '';
 
-                // If I am the author, partner is target
                 if (post.authorId === myProfile.id || (!post.authorId && post.authorName === user?.name)) {
                     if (post.targetUserId) {
                         partnerId = post.targetUserId;
-                        // Find name from profile if possible
                         const p = userProfiles.find(u => u.id === partnerId);
-                        partnerName = p ? `${p.firstName} ${p.lastName}` : 'Utilisateur Inconnu';
+                        partnerName = p ? `${p.firstName} ${p.lastName}` : t.unknownUser;
                     }
-                }
-                // If I am the target, partner is author
-                else if (post.targetUserId === myProfile.id) {
-                    partnerId = post.authorId || ''; // Fallback for legacy
+                } else if (post.targetUserId === myProfile.id) {
+                    partnerId = post.authorId || '';
                     partnerName = post.authorName;
                 }
 
@@ -69,18 +155,6 @@ export const SocialFeed: React.FC = () => {
     }
 
     const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        // ... (existing resize logic preserved)
-        // Note: For brevity in this diff, assuming unchanged existing helper functions 
-        // are preserved. But wait, I must preserve previous code EXACTLY or use `replace_file_content` block correctly.
-        // Actually, I can insert the state at line 18. And then replace the whole return block to include new UI.
-
-        // Let's do a larger replace to be safe and clean.
-        // Re-implementing handlePhotoUpload to be sure (it was long). 
-        // BETTER STRATEGY: Use MULTI_REPLACE or be very careful. 
-        // The user wants me to edit the file. I will look at the previous content again.
-        // It's safer to just replace the whole file content or large chunks if I am confident.
-        // I will replace the component body.
-
         const file = e.target.files?.[0];
         if (file) {
             setIsProcessing(true);
@@ -147,7 +221,6 @@ export const SocialFeed: React.FC = () => {
         setShowSuggestions(false);
     };
 
-    // Filter suggestions locally
     const filteredUsers = userProfiles.filter(p => {
         const fullName = `${p.firstName} ${p.lastName}`.toLowerCase();
         return fullName.includes(searchTerm.toLowerCase());
@@ -178,35 +251,25 @@ export const SocialFeed: React.FC = () => {
         setPhoto(null);
     };
 
-    // Filter Posts Logic (Security + Channel View)
     const visiblePosts = socialPosts.filter(post => {
-        // 1. SECURITY FILTER (Can I see this?)
         let allowed = false;
 
-        // Global posts -> Everyone
         if (!post.targetAudience || post.targetAudience === 'GLOBAL') allowed = true;
-
-        // Department posts -> Members of Dept + Prod + Author
         else if (post.targetAudience === 'DEPARTMENT') {
             if (user?.department === 'PRODUCTION' || user?.department === 'Régie') allowed = true;
             else if (post.targetDept === user?.department) allowed = true;
             else if (post.authorDepartment === user?.department) allowed = true;
         }
-
-        // Private DMs -> Sender + Recipient + Admin
         else if (post.targetAudience === 'USER') {
             if (user?.department === 'PRODUCTION') allowed = true;
             const myProfile = userProfiles.find(p => p.email === user?.email);
-            // Recipient is me
             if (post.targetUserId === myProfile?.id) allowed = true;
-            // Sender is me (check via ID or Name backup)
             if (post.authorId === myProfile?.id) allowed = true;
-            else if (!post.authorId && post.authorName === user?.name) allowed = true; // Legacy fallback
+            else if (!post.authorId && post.authorName === user?.name) allowed = true;
         }
 
         if (!allowed) return false;
 
-        // 2. CHANNEL VIEW FILTER (Does it match my current selection scope?)
         if (targetAudience === 'GLOBAL') {
             return !post.targetAudience || post.targetAudience === 'GLOBAL';
         }
@@ -242,12 +305,12 @@ export const SocialFeed: React.FC = () => {
                             }`}
                     >
                         <Clock className="h-4 w-4" />
-                        Mes Discussions
+                        {t.myDiscussions}
                     </button>
 
                     <h2 className="text-3xl font-bold text-white flex items-center justify-center gap-3 order-first md:order-none">
                         <MessageSquare className="h-8 w-8 text-pink-500" />
-                        Mur Social
+                        {t.socialWall}
                     </h2>
 
                     <button
@@ -256,10 +319,10 @@ export const SocialFeed: React.FC = () => {
                             ? 'bg-pink-600 text-white border-pink-500'
                             : 'bg-cinema-800 text-pink-400 border border-pink-500/30 hover:bg-pink-600/10 hover:border-pink-500'
                             }`}
-                        title={showGallery ? "Voir la discussion" : "Voir la galerie photo"}
+                        title={showGallery ? t.viewDiscussion : t.viewGallery}
                     >
                         {showGallery ? <MessageSquare className="h-4 w-4" /> : <ImageIcon className="h-4 w-4" />}
-                        {showGallery ? "Le Mur" : "Les Photos"}
+                        {showGallery ? t.theWall : t.photos}
                     </button>
                 </div>
 
@@ -268,10 +331,10 @@ export const SocialFeed: React.FC = () => {
                     <div className="bg-cinema-800 border border-pink-500/30 rounded-xl p-4 animate-in slide-in-from-top-2 text-left">
                         <h3 className="text-sm font-bold text-pink-400 mb-3 flex items-center gap-2">
                             <Clock className="h-4 w-4" />
-                            Reprendre une discussion récente
+                            {t.resumeDiscussion}
                         </h3>
                         {recentPartners.length === 0 ? (
-                            <p className="text-slate-500 text-sm italic">Aucune conversation privée récente.</p>
+                            <p className="text-slate-500 text-sm italic">{t.noRecent}</p>
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 {recentPartners.map(partner => (
@@ -290,7 +353,7 @@ export const SocialFeed: React.FC = () => {
                                         </div>
                                         <div className="flex flex-col items-start overflow-hidden">
                                             <span className="text-sm font-medium text-slate-200 group-hover:text-white truncate w-full text-left">{partner.name}</span>
-                                            <span className="text-[10px] text-slate-500">Dernier msg: {new Date(partner.lastDate).toLocaleDateString()}</span>
+                                            <span className="text-[10px] text-slate-500">{t.lastMsg}: {new Date(partner.lastDate).toLocaleDateString()}</span>
                                         </div>
                                     </button>
                                 ))}
@@ -304,7 +367,7 @@ export const SocialFeed: React.FC = () => {
                                 }}
                                 className="w-full text-center text-xs text-slate-400 hover:text-pink-400 py-1"
                             >
-                                Retour au Mur Global
+                                {t.backGlobal}
                             </button>
                         </div>
                     </div>
@@ -312,11 +375,11 @@ export const SocialFeed: React.FC = () => {
 
                 {showGallery ? (
                     <div className="bg-pink-600/10 text-pink-400 px-4 py-2 rounded-lg text-sm inline-block">
-                        📸 Mode Galerie : {galleryPhotos.length} photo(s)
+                        📸 {t.galleryMode.replace('{count}', galleryPhotos.length.toString())}
                     </div>
                 ) : (
                     <p className="text-slate-400">
-                        Partagez des photos, des infos et des moments de vie du tournage.
+                        {t.shareMoments}
                     </p>
                 )}
             </header>
@@ -333,9 +396,9 @@ export const SocialFeed: React.FC = () => {
                                 onChange={(e) => setTargetAudience(e.target.value as any)}
                                 className="bg-cinema-900 text-white border border-cinema-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-pink-500 outline-none"
                             >
-                                <option value="GLOBAL">🌏 Toute l'équipe</option>
-                                <option value="DEPARTMENT">🏢 Un Département</option>
-                                <option value="USER">👤 Une Personne</option>
+                                <option value="GLOBAL">{t.global}</option>
+                                <option value="DEPARTMENT">{t.department}</option>
+                                <option value="USER">{t.user}</option>
                             </select>
 
                             {/* Department Selector */}
@@ -348,7 +411,7 @@ export const SocialFeed: React.FC = () => {
                                     {Object.values(Department).map(dept => (
                                         <option key={dept} value={dept}>{dept}</option>
                                     ))}
-                                    <option value="PRODUCTION">Production</option>
+                                    <option value="PRODUCTION">{t.production}</option>
                                 </select>
                             )}
 
@@ -358,7 +421,7 @@ export const SocialFeed: React.FC = () => {
                                     <div className="relative">
                                         <input
                                             type="text"
-                                            placeholder="Rechercher une personne..."
+                                            placeholder={t.searchUser}
                                             className="w-full bg-cinema-900 text-white border border-cinema-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-pink-500 outline-none pl-8"
                                             value={searchTerm}
                                             onChange={(e) => {
@@ -396,7 +459,7 @@ export const SocialFeed: React.FC = () => {
                                                 ))
                                             ) : (
                                                 <div className="px-3 py-2 text-sm text-slate-500 text-center">
-                                                    Aucun résultat
+                                                    {t.noResult}
                                                 </div>
                                             )}
                                         </div>
@@ -413,14 +476,14 @@ export const SocialFeed: React.FC = () => {
                                 <textarea
                                     value={newPostContent}
                                     onChange={(e) => setNewPostContent(e.target.value)}
-                                    placeholder={`Quoi de neuf, ${user?.name.split(' ')[0]} ?`}
+                                    placeholder={t.placeholder.replace('{name}', user?.name.split(' ')[0] || '')}
                                     className="w-full bg-cinema-900 border border-cinema-700 rounded-lg p-4 text-white focus:ring-2 focus:ring-pink-500 focus:outline-none resize-none min-h-[100px]"
                                 />
 
                                 {isProcessing && (
                                     <div className="text-pink-400 text-sm flex items-center gap-2 animate-pulse">
                                         <ImageIcon className="h-4 w-4" />
-                                        Traitement de l'image en cours...
+                                        {t.processing}
                                     </div>
                                 )}
 
@@ -445,7 +508,7 @@ export const SocialFeed: React.FC = () => {
                                         className="flex items-center justify-center sm:justify-start gap-2 text-slate-400 hover:text-pink-400 transition-colors text-sm font-medium disabled:opacity-50 py-2 sm:py-0"
                                     >
                                         <ImageIcon className="h-5 w-5" />
-                                        Ajouter une photo
+                                        {t.addPhoto}
                                     </button>
                                     <input
                                         type="file"
@@ -459,7 +522,7 @@ export const SocialFeed: React.FC = () => {
                                         {targetAudience !== 'GLOBAL' && (
                                             <span className="text-xs text-yellow-400 flex items-center justify-center gap-1 bg-yellow-400/10 px-2 py-1 rounded">
                                                 <Lock className="h-3 w-3" />
-                                                Message Privé
+                                                {t.privateMsg}
                                             </span>
                                         )}
                                         <button
@@ -468,7 +531,7 @@ export const SocialFeed: React.FC = () => {
                                             className="bg-pink-600 hover:bg-pink-500 text-white px-6 py-2 rounded-lg font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-pink-600/20"
                                         >
                                             <Send className="h-4 w-4" />
-                                            Publier
+                                            {t.publish}
                                         </button>
                                     </div>
                                 </div>
@@ -484,7 +547,7 @@ export const SocialFeed: React.FC = () => {
                     {galleryPhotos.length === 0 ? (
                         <div className="text-center py-12 text-slate-500 bg-cinema-800/30 rounded-xl border border-cinema-700 border-dashed">
                             <ImageIcon className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                            <p>Aucune photo dans cette conversation.</p>
+                            <p>{t.noPhotos}</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -511,7 +574,7 @@ export const SocialFeed: React.FC = () => {
                     {visiblePosts.length === 0 ? (
                         <div className="text-center py-12 text-slate-500 bg-cinema-800/30 rounded-xl border border-cinema-700 border-dashed">
                             <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                            <p>Aucun message pour le moment. Soyez le premier à publier !</p>
+                            <p>{t.noMessages}</p>
                         </div>
                     ) : (
                         <div className="flex flex-col gap-4">
@@ -567,7 +630,7 @@ export const SocialFeed: React.FC = () => {
                                                 {(isMe || user?.department === 'PRODUCTION') && (
                                                     <button
                                                         onClick={() => {
-                                                            if (window.confirm("Supprimer ce message ?")) {
+                                                            if (window.confirm(t.deleteConfirm)) {
                                                                 deleteSocialPost(post.id, post.photo);
                                                             }
                                                         }}

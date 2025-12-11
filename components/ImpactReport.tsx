@@ -8,10 +8,179 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
 export const ImpactReport: React.FC = () => {
-    const { project, buyBackItems } = useProject();
+    const { project, buyBackItems, language } = useProject();
     const [metrics, setMetrics] = useState<ImpactMetrics | null>(null);
     const [loading, setLoading] = useState(false);
     const [chartView, setChartView] = useState<'quantity' | 'money' | 'co2'>('quantity');
+
+    // Translations
+    const t = {
+        fr: {
+            title: "Rapport d'Impact RSE",
+            subtitle: "Performance écologique et sociale de la production {company}. Film {project}.",
+            afnor: "Conforme AFNOR Spec 2308 (Estimé)",
+            loading: "Analyse IA en cours...",
+            share: "Partager / PDF",
+            ecoScore: "Eco Score",
+            certification: "Certification A Better Set",
+            valuationRate: "Taux de Valorisation",
+            reuseRecycle: "Réemploi & Recyclage (Objectif > 50%)",
+            savings: "Économies",
+            injectedValue: "Valeur réinjectée (Circularité)",
+            environment: "Environnement",
+            avoidedCo2: "CO2 évité (Scope 3 - Base Carbone)",
+            lifecycle: "Cycle de Vie des Consommables",
+            quantity: "Quantité",
+            economy: "Économie (€)",
+            carbon: "Carbone (CO2)",
+            chart: {
+                donation: "Don Pédagogique",
+                stock: "Stock Virtuel",
+                shortFilm: "Court-Métrage",
+                none: "Non Valorisé"
+            },
+            consumedTitle: "Articles Entièrement Consommés",
+            table: {
+                item: "Article",
+                dept: "Département",
+                qtyConsumed: "Quantité Consommée",
+                impact: "Impact CO2 Est."
+            },
+            noConsumed: "Aucun article entièrement consommé pour le moment.",
+            virtualStockTitle: "Stock Virtuel & Réemploi",
+            recoverable: "Récupérable pour un prochain projet",
+            virtualStockDesc: "Les éléments suivants ont été identifiés comme \"Stock Virtuel\". Ils sont stockés numériquement et peuvent être réutilisés directement sur une nouvelle production, évitant ainsi de nouveaux achats et réduisant l'empreinte carbone.",
+            available: "Dispo",
+            internalSalesTitle: "Réemploi Interne / Ventes",
+            circularEconomy: "Économie Circulaire",
+            internalSalesDesc: "Ces articles ont été revendus ou transférés entre départements, prolongeant leur durée de vie et générant des revenus pour la production.",
+            totalRevenue: "Total Revenus Générés",
+            itemsSold: "articles vendus",
+            salesTable: {
+                item: "Article",
+                seller: "Vendeur",
+                price: "Prix"
+            },
+            empty: {
+                title: "Aucun surplus à analyser pour le moment.",
+                desc: "Complétez l'inventaire de fin de tournage pour générer le rapport RSE."
+            },
+            pdf: {
+                title: "Rapport RSE - {project}",
+                text: "Voici le rapport d'impact écologique pour le projet {project}."
+            }
+        },
+        en: {
+            title: "CSR Impact Report",
+            subtitle: "Ecological and social performance of {company} production. Film {project}.",
+            afnor: "Compliant AFNOR Spec 2308 (Estimated)",
+            loading: "AI Analysis in progress...",
+            share: "Share / PDF",
+            ecoScore: "Eco Score",
+            certification: "A Better Set Certification",
+            valuationRate: "Valuation Rate",
+            reuseRecycle: "Reuse & Recycling (Goal > 50%)",
+            savings: "Savings",
+            injectedValue: "Re-injected Value (Circularity)",
+            environment: "Environment",
+            avoidedCo2: "Avoided CO2 (Scope 3 - Carbon Base)",
+            lifecycle: "Consumables Lifecycle",
+            quantity: "Quantity",
+            economy: "Savings (€)",
+            carbon: "Carbon (CO2)",
+            chart: {
+                donation: "Educational Donation",
+                stock: "Virtual Stock",
+                shortFilm: "Short Film",
+                none: "Non-Valued"
+            },
+            consumedTitle: "Fully Consumed Items",
+            table: {
+                item: "Item",
+                dept: "Department",
+                qtyConsumed: "Quantity Consumed",
+                impact: "Est. CO2 Impact"
+            },
+            noConsumed: "No fully consumed items yet.",
+            virtualStockTitle: "Virtual Stock & Reuse",
+            recoverable: "Recoverable for a future project",
+            virtualStockDesc: "The following items have been identified as \"Virtual Stock\". They are digitally stored and can be directly reused on a new production, avoiding new purchases and reducing the carbon footprint.",
+            available: "Avail.",
+            internalSalesTitle: "Internal Reuse / Sales",
+            circularEconomy: "Circular Economy",
+            internalSalesDesc: "These items have been resold or transferred between departments, extending their lifespan and generating revenue for the production.",
+            totalRevenue: "Total Revenue Generated",
+            itemsSold: "items sold",
+            salesTable: {
+                item: "Item",
+                seller: "Seller",
+                price: "Price"
+            },
+            empty: {
+                title: "No surplus to analyze yet.",
+                desc: "Complete the end-of-shoot inventory to generate the CSR report."
+            },
+            pdf: {
+                title: "CSR Report - {project}",
+                text: "Here is the ecological impact report for the project {project}."
+            }
+        },
+        es: {
+            title: "Informe de Impacto RSE",
+            subtitle: "Rendimiento ecológico y social de la producción {company}. Película {project}.",
+            afnor: "Conforme AFNOR Spec 2308 (Estimado)",
+            loading: "Análisis IA en curso...",
+            share: "Compartir / PDF",
+            ecoScore: "Eco Puntuación",
+            certification: "Certificación A Better Set",
+            valuationRate: "Tasa de Valorización",
+            reuseRecycle: "Reutilización y Reciclaje (Objetivo > 50%)",
+            savings: "Ahorros",
+            injectedValue: "Valor reinyectado (Circularidad)",
+            environment: "Medio Ambiente",
+            avoidedCo2: "CO2 evitado (Alcance 3 - Base Carbono)",
+            lifecycle: "Ciclo de Vida de Consumibles",
+            quantity: "Cant.",
+            economy: "Ahorro (€)",
+            carbon: "Carbono (CO2)",
+            chart: {
+                donation: "Donación Educativa",
+                stock: "Stock Virtual",
+                shortFilm: "Cortometraje",
+                none: "No Valorizado"
+            },
+            consumedTitle: "Artículos Totalmente Consumidos",
+            table: {
+                item: "Artículo",
+                dept: "Departamento",
+                qtyConsumed: "Cantidad Consumida",
+                impact: "Impacto CO2 Est."
+            },
+            noConsumed: "Ningún artículo totalmente consumido por el momento.",
+            virtualStockTitle: "Stock Virtual y Reutilización",
+            recoverable: "Recuperable para un próximo proyecto",
+            virtualStockDesc: "Los siguientes elementos han sido identificados como \"Stock Virtual\". Se almacenan digitalmente y pueden reutilizarse directamente en una nueva producción, evitando nuevas compras y reduciendo la huella de carbono.",
+            available: "Disp.",
+            internalSalesTitle: "Reutilización Interna / Ventas",
+            circularEconomy: "Economía Circular",
+            internalSalesDesc: "Estos artículos han sido revendidos o transferidos entre departamentos, extendiendo su vida útil y generando ingresos para la producción.",
+            totalRevenue: "Total Ingresos Generados",
+            itemsSold: "artículos vendidos",
+            salesTable: {
+                item: "Artículo",
+                seller: "Vendedor",
+                price: "Precio"
+            },
+            empty: {
+                title: "Ningún excedente para analizar por el momento.",
+                desc: "Complete el inventario de fin de rodaje para generar el informe RSE."
+            },
+            pdf: {
+                title: "Informe RSE - {project}",
+                text: "Aquí está el informe de impacto ecológico para el proyecto {project}."
+            }
+        }
+    }[language || 'fr'];
 
     useEffect(() => {
         const fetchMetrics = async () => {
@@ -67,10 +236,10 @@ export const ImpactReport: React.FC = () => {
     };
 
     const pieData = [
-        { name: 'Don Pédagogique', value: getMetricByAction(SurplusAction.DONATION, chartView), color: '#d946ef' }, // Fuchsia
-        { name: 'Stock Virtuel', value: getMetricByAction(SurplusAction.MARKETPLACE, chartView), color: '#06b6d4' }, // Cyan
-        { name: 'Court-Métrage', value: getMetricByAction(SurplusAction.SHORT_FILM, chartView), color: '#f59e0b' }, // Amber
-        { name: 'Non Valorisé', value: getMetricByAction(SurplusAction.NONE, chartView), color: '#ef4444' }, // Red
+        { name: t.chart.donation, value: getMetricByAction(SurplusAction.DONATION, chartView), color: '#d946ef' }, // Fuchsia
+        { name: t.chart.stock, value: getMetricByAction(SurplusAction.MARKETPLACE, chartView), color: '#06b6d4' }, // Cyan
+        { name: t.chart.shortFilm, value: getMetricByAction(SurplusAction.SHORT_FILM, chartView), color: '#f59e0b' }, // Amber
+        { name: t.chart.none, value: getMetricByAction(SurplusAction.NONE, chartView), color: '#ef4444' }, // Red
     ].filter(d => d.value > 0);
 
     const formatValue = (value: number) => {
@@ -113,8 +282,8 @@ export const ImpactReport: React.FC = () => {
                 const blob = pdf.output('blob');
                 const file = new File([blob], fileName, { type: 'application/pdf' });
                 await navigator.share({
-                    title: `Rapport RSE - ${project.name}`,
-                    text: `Voici le rapport d'impact écologique pour le projet ${project.name}.`,
+                    title: t.pdf.title.replace('{project}', project.name),
+                    text: t.pdf.text.replace('{project}', project.name),
                     files: [file],
                 });
             } else {
@@ -132,8 +301,8 @@ export const ImpactReport: React.FC = () => {
         return (
             <div className="flex flex-col items-center justify-center h-96 text-slate-500">
                 <Leaf className="h-16 w-16 mb-4 text-slate-700" />
-                <p className="text-lg">Aucun surplus à analyser pour le moment.</p>
-                <p className="text-sm">Complétez l'inventaire de fin de tournage pour générer le rapport RSE.</p>
+                <p className="text-lg">{t.empty.title}</p>
+                <p className="text-sm">{t.empty.desc}</p>
             </div>
         )
     }
@@ -142,17 +311,17 @@ export const ImpactReport: React.FC = () => {
         <div className="space-y-8">
             <header className="flex justify-between items-start">
                 <div>
-                    <h2 className="text-3xl font-bold text-white">Rapport d'Impact RSE</h2>
-                    <p className="text-slate-400 mt-1">Performance écologique et sociale de la production {project.productionCompany}. Film {project.name}</p>
+                    <h2 className="text-3xl font-bold text-white">{t.title}</h2>
+                    <p className="text-slate-400 mt-1">{t.subtitle.replace('{company}', project.productionCompany).replace('{project}', project.name)}</p>
                     <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-medium">
                         <Award className="h-3 w-3" />
-                        Conforme AFNOR Spec 2308 (Estimé)
+                        {t.afnor}
                     </div>
                 </div>
                 {loading && (
                     <div className="flex items-center gap-2 text-eco-400 bg-eco-900/20 px-4 py-2 rounded-full">
                         <Loader2 className="h-5 w-5 animate-spin" />
-                        <span className="text-sm font-medium">Analyse IA en cours...</span>
+                        <span className="text-sm font-medium">{t.loading}</span>
                     </div>
                 )}
                 {!loading && metrics && (
@@ -161,7 +330,7 @@ export const ImpactReport: React.FC = () => {
                         className="flex items-center gap-2 bg-eco-600 hover:bg-eco-500 text-white px-4 py-2 rounded-lg shadow-lg transition-colors"
                     >
                         <Share2 className="h-4 w-4" />
-                        <span className="hidden md:inline">Partager / PDF</span>
+                        <span className="hidden md:inline">{t.share}</span>
                     </button>
                 )}
             </header>
@@ -198,14 +367,14 @@ export const ImpactReport: React.FC = () => {
                                 </svg>
                                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
                                     <span className="text-3xl font-bold text-white">{metrics.sustainabilityScore}</span>
-                                    <span className="block text-[10px] text-eco-400 uppercase font-bold">Eco Score</span>
+                                    <span className="block text-[10px] text-eco-400 uppercase font-bold">{t.ecoScore}</span>
                                 </div>
                             </div>
 
                             <div className="flex-1">
                                 <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
                                     <Award className="text-yellow-400 h-6 w-6" />
-                                    Certification A Better Set
+                                    {t.certification}
                                 </h3>
                                 <p className="text-slate-300 leading-relaxed italic">
                                     "{metrics.aiAnalysis}"
@@ -218,50 +387,50 @@ export const ImpactReport: React.FC = () => {
                         <div className="bg-cinema-800 p-6 rounded-xl border border-cinema-700">
                             <div className="flex items-center gap-3 mb-2 text-slate-400">
                                 <Building className="h-5 w-5" />
-                                <span className="text-sm uppercase font-bold">Taux de Valorisation</span>
+                                <span className="text-sm uppercase font-bold">{t.valuationRate}</span>
                             </div>
                             <p className="text-4xl font-bold text-white">{metrics.recyclingRate}%</p>
-                            <p className="text-sm text-slate-500">Réemploi &amp; Recyclage (Objectif &gt; 50%)</p>
+                            <p className="text-sm text-slate-500">{t.reuseRecycle}</p>
                         </div>
                         <div className="bg-cinema-800 p-6 rounded-xl border border-cinema-700">
                             <div className="flex items-center gap-3 mb-2 text-slate-400">
                                 <DollarSign className="h-5 w-5" />
-                                <span className="text-sm uppercase font-bold">Économies</span>
+                                <span className="text-sm uppercase font-bold">{t.savings}</span>
                             </div>
                             <p className="text-4xl font-bold text-eco-400">{metrics.moneySaved} €</p>
-                            <p className="text-sm text-slate-500">Valeur réinjectée (Circularité)</p>
+                            <p className="text-sm text-slate-500">{t.injectedValue}</p>
                         </div>
                         <div className="bg-cinema-800 p-6 rounded-xl border border-cinema-700">
                             <div className="flex items-center gap-3 mb-2 text-slate-400">
                                 <Leaf className="h-5 w-5" />
-                                <span className="text-sm uppercase font-bold">Environnement</span>
+                                <span className="text-sm uppercase font-bold">{t.environment}</span>
                             </div>
                             <p className="text-4xl font-bold text-blue-400">{metrics.co2SavedKg} kg</p>
-                            <p className="text-sm text-slate-500">CO2 évité (Scope 3 - Base Carbone)</p>
+                            <p className="text-sm text-slate-500">{t.avoidedCo2}</p>
                         </div>
                     </div>
 
                     <div className="bg-cinema-800 p-6 rounded-xl border border-cinema-700 h-[28rem] md:h-96">
                         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
-                            <h3 className="text-lg font-bold text-white text-center md:text-left">Cycle de Vie des Consommables</h3>
+                            <h3 className="text-lg font-bold text-white text-center md:text-left">{t.lifecycle}</h3>
                             <div className="flex bg-cinema-900 rounded-lg p-1 w-full md:w-auto justify-center md:justify-start overflow-x-auto">
                                 <button
                                     onClick={() => setChartView('quantity')}
                                     className={`flex-1 md:flex-none px-3 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${chartView === 'quantity' ? 'bg-cinema-700 text-white' : 'text-slate-400 hover:text-white'}`}
                                 >
-                                    Quantité
+                                    {t.quantity}
                                 </button>
                                 <button
                                     onClick={() => setChartView('money')}
                                     className={`flex-1 md:flex-none px-3 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${chartView === 'money' ? 'bg-cinema-700 text-white' : 'text-slate-400 hover:text-white'}`}
                                 >
-                                    Économie (€)
+                                    {t.economy}
                                 </button>
                                 <button
                                     onClick={() => setChartView('co2')}
                                     className={`flex-1 md:flex-none px-3 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${chartView === 'co2' ? 'bg-cinema-700 text-white' : 'text-slate-400 hover:text-white'}`}
                                 >
-                                    Carbone (CO2)
+                                    {t.carbon}
                                 </button>
                             </div>
                         </div>
@@ -295,24 +464,24 @@ export const ImpactReport: React.FC = () => {
                         <div className="bg-cinema-700/40 px-6 py-4 border-b border-cinema-700">
                             <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                 <PackageOpen className="h-5 w-5 text-slate-400" />
-                                Articles Entièrement Consommés
+                                {t.consumedTitle}
                             </h3>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm text-slate-400">
                                 <thead className="bg-cinema-900 uppercase font-medium border-b border-cinema-700 text-xs">
                                     <tr>
-                                        <th className="px-6 py-3">Article</th>
-                                        <th className="px-6 py-3">Département</th>
-                                        <th className="px-6 py-3">Quantité Consommée</th>
-                                        <th className="px-6 py-3">Impact CO2 Est.</th>
+                                        <th className="px-6 py-3">{t.table.item}</th>
+                                        <th className="px-6 py-3">{t.table.dept}</th>
+                                        <th className="px-6 py-3">{t.table.qtyConsumed}</th>
+                                        <th className="px-6 py-3">{t.table.impact}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-cinema-700">
                                     {project.items.filter(i => i.quantityCurrent === 0 && i.purchased).length === 0 ? (
                                         <tr>
                                             <td colSpan={4} className="px-6 py-8 text-center italic text-slate-500">
-                                                Aucun article entièrement consommé pour le moment.
+                                                {t.noConsumed}
                                             </td>
                                         </tr>
                                     ) : (
@@ -347,15 +516,15 @@ export const ImpactReport: React.FC = () => {
                             <div className="bg-cyan-900/30 px-6 py-4 border-b border-cyan-700/50 flex items-center justify-between">
                                 <h3 className="text-lg font-bold text-cyan-100 flex items-center gap-2">
                                     <Share2 className="h-5 w-5 text-cyan-400" />
-                                    Stock Virtuel & Réemploi
+                                    {t.virtualStockTitle}
                                 </h3>
                                 <span className="text-xs font-bold bg-cyan-500/20 text-cyan-300 px-3 py-1 rounded-full border border-cyan-500/30">
-                                    Récupérable pour un prochain projet
+                                    {t.recoverable}
                                 </span>
                             </div>
                             <div className="p-6">
                                 <p className="text-sm text-cyan-200/80 mb-4">
-                                    Les éléments suivants ont été identifiés comme "Stock Virtuel". Ils sont stockés numériquement et peuvent être réutilisés directement sur une nouvelle production, évitant ainsi de nouveaux achats et réduisant l'empreinte carbone.
+                                    {t.virtualStockDesc}
                                 </p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                     {project.items
@@ -368,7 +537,7 @@ export const ImpactReport: React.FC = () => {
                                                 </div>
                                                 <div className="text-right">
                                                     <div className="text-cyan-400 font-bold">{item.quantityCurrent} {item.unit}</div>
-                                                    <div className="text-[10px] text-slate-600 uppercase">Dispo</div>
+                                                    <div className="text-[10px] text-slate-600 uppercase">{t.available}</div>
                                                 </div>
                                             </div>
                                         ))}
@@ -383,25 +552,25 @@ export const ImpactReport: React.FC = () => {
                             <div className="bg-green-900/30 px-6 py-4 border-b border-green-700/50 flex items-center justify-between">
                                 <h3 className="text-lg font-bold text-green-100 flex items-center gap-2">
                                     <ShoppingBag className="h-5 w-5 text-green-400" />
-                                    Réemploi Interne / Ventes
+                                    {t.internalSalesTitle}
                                 </h3>
                                 <span className="text-xs font-bold bg-green-500/20 text-green-300 px-3 py-1 rounded-full border border-green-500/30">
-                                    Économie Circulaire
+                                    {t.circularEconomy}
                                 </span>
                             </div>
                             <div className="p-6">
                                 <p className="text-sm text-green-200/80 mb-4">
-                                    Ces articles ont été revendus ou transférés entre départements, prolongeant leur durée de vie et générant des revenus pour la production.
+                                    {t.internalSalesDesc}
                                 </p>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div className="bg-cinema-900/50 p-6 rounded-lg border border-cinema-700">
-                                        <div className="text-sm text-slate-400 uppercase font-bold mb-2">Total Revenus Générés</div>
+                                        <div className="text-sm text-slate-400 uppercase font-bold mb-2">{t.totalRevenue}</div>
                                         <div className="text-3xl font-bold text-green-400">
                                             {buyBackItems.filter(i => i.status === 'SOLD').reduce((acc, i) => acc + i.price, 0)} €
                                         </div>
                                         <div className="text-sm text-slate-500 mt-1">
-                                            {buyBackItems.filter(i => i.status === 'SOLD').length} articles vendus
+                                            {buyBackItems.filter(i => i.status === 'SOLD').length} {t.itemsSold}
                                         </div>
                                     </div>
 
@@ -409,9 +578,9 @@ export const ImpactReport: React.FC = () => {
                                         <table className="w-full text-left text-sm text-slate-400">
                                             <thead className="border-b border-cinema-700">
                                                 <tr>
-                                                    <th className="pb-2">Article</th>
-                                                    <th className="pb-2">Vendeur</th>
-                                                    <th className="pb-2">Prix</th>
+                                                    <th className="pb-2">{t.salesTable.item}</th>
+                                                    <th className="pb-2">{t.salesTable.seller}</th>
+                                                    <th className="pb-2">{t.salesTable.price}</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-cinema-700/50">
