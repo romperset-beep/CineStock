@@ -252,10 +252,14 @@ export const SocialFeed: React.FC = () => {
 
                     <button
                         onClick={() => setShowGallery(!showGallery)}
-                        className={`p-2 rounded-lg transition-colors ${showGallery ? 'bg-pink-600 text-white' : 'bg-cinema-800 text-slate-400 hover:text-white'}`}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm transition-all shadow-lg ${showGallery
+                            ? 'bg-pink-600 text-white border-pink-500'
+                            : 'bg-cinema-800 text-pink-400 border border-pink-500/30 hover:bg-pink-600/10 hover:border-pink-500'
+                            }`}
                         title={showGallery ? "Voir la discussion" : "Voir la galerie photo"}
                     >
-                        {showGallery ? <MessageSquare className="h-5 w-5" /> : <ImageIcon className="h-5 w-5" />}
+                        {showGallery ? <MessageSquare className="h-4 w-4" /> : <ImageIcon className="h-4 w-4" />}
+                        {showGallery ? "Le Mur" : "Les Photos"}
                     </button>
                 </div>
 
