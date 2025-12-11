@@ -232,17 +232,20 @@ export const SocialFeed: React.FC = () => {
     return (
         <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in duration-500">
             <header className="text-center space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                     {/* Recent Discussions Toggle */}
                     <button
                         onClick={() => setShowRecentDiscussions(!showRecentDiscussions)}
-                        className={`p-2 rounded-lg transition-colors ${showRecentDiscussions ? 'bg-pink-600 text-white' : 'bg-cinema-800 text-slate-400 hover:text-white'}`}
-                        title="Mes discussions récentes"
+                        className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm transition-all shadow-lg ${showRecentDiscussions
+                            ? 'bg-pink-600 text-white border-pink-500'
+                            : 'bg-cinema-800 text-pink-400 border border-pink-500/30 hover:bg-pink-600/10 hover:border-pink-500'
+                            }`}
                     >
-                        <Clock className="h-5 w-5" />
+                        <Clock className="h-4 w-4" />
+                        Mes Discussions
                     </button>
 
-                    <h2 className="text-3xl font-bold text-white flex items-center justify-center gap-3">
+                    <h2 className="text-3xl font-bold text-white flex items-center justify-center gap-3 order-first md:order-none">
                         <MessageSquare className="h-8 w-8 text-pink-500" />
                         Mur Social
                     </h2>
