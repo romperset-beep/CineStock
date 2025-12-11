@@ -3,10 +3,12 @@ import { useProject } from '../context/ProjectContext';
 import { Department } from '../types';
 import { ShoppingBag, Tag, Euro, User, CheckSquare, Square, Plus, Image as ImageIcon, X, Trash2 } from 'lucide-react';
 import { SellItemModal } from './SellItemModal';
+import { SalesHistoryModal } from './SalesHistoryModal';
 
 export const BuyBackMarketplace: React.FC = () => {
     const { buyBackItems, toggleBuyBackReservation, confirmBuyBackTransaction, deleteBuyBackItem, user, currentDept } = useProject();
     const [isSellModalOpen, setIsSellModalOpen] = useState(false);
+    const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false); // Added
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
     if (!buyBackItems) {
@@ -33,13 +35,25 @@ export const BuyBackMarketplace: React.FC = () => {
                     </p>
                 </div>
 
-                <button
-                    onClick={() => setIsSellModalOpen(true)}
-                    className="bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-all shadow-lg shadow-yellow-500/20"
-                >
-                    <Plus className="h-5 w-5" />
-                    Vendre un article
-                </button>
+                <div className="flex gap-2">
+                    {/* History Button for Production */}
+                    {user?.department === 'PRODUCTION' && (
+                        <button
+                            onClick={() => setIsHistoryModalOpen(true)}
+                            className="bg-cinema-800 hover:bg-cinema-700 text-slate-200 px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-all border border-cinema-600"
+                        >
+                            Historique des Ventes
+                        </button>
+                    )}
+
+                    <button
+                        onClick={() => setIsSellModalOpen(true)}
+                        className="bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-all shadow-lg shadow-yellow-500/20"
+                    >
+                        <Plus className="h-5 w-5" />
+                        Vendre un article
+                    </button>
+                </div>
             </header>
 
             {/* Production Stats */}
@@ -205,6 +219,7 @@ export const BuyBackMarketplace: React.FC = () => {
             </div>
 
             <SellItemModal isOpen={isSellModalOpen} onClose={() => setIsSellModalOpen(false)} />
+            <SalesHistoryModal isOpen={isHistoryModalOpen} onClose={() => setIsHistoryModalOpen(false)} items={buyBackItems} />
 
             {/* Full Screen Image Modal */}
             {selectedImage && (

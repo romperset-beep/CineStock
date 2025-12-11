@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { generateEcoImpactReport } from '../services/geminiService';
 import { ImpactMetrics, SurplusAction } from '../types';
-import { Loader2, Leaf, Share2, Award, Building, DollarSign, PackageOpen } from 'lucide-react';
+import { Loader2, Leaf, Share2, Award, Building, DollarSign, PackageOpen, ShoppingBag } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
 export const ImpactReport: React.FC = () => {
-    const { project } = useProject();
+    const { project, buyBackItems } = useProject();
     const [metrics, setMetrics] = useState<ImpactMetrics | null>(null);
     const [loading, setLoading] = useState(false);
     const [chartView, setChartView] = useState<'quantity' | 'money' | 'co2'>('quantity');
@@ -372,6 +372,61 @@ export const ImpactReport: React.FC = () => {
                                                 </div>
                                             </div>
                                         ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* BuyBack Sales Section */}
+                    {buyBackItems.some(i => i.status === 'SOLD') && (
+                        <div className="bg-cinema-800 rounded-xl border border-cinema-700 overflow-hidden col-span-full mt-6">
+                            <div className="bg-green-900/30 px-6 py-4 border-b border-green-700/50 flex items-center justify-between">
+                                <h3 className="text-lg font-bold text-green-100 flex items-center gap-2">
+                                    <ShoppingBag className="h-5 w-5 text-green-400" />
+                                    Réemploi Interne / Ventes
+                                </h3>
+                                <span className="text-xs font-bold bg-green-500/20 text-green-300 px-3 py-1 rounded-full border border-green-500/30">
+                                    Économie Circulaire
+                                </span>
+                            </div>
+                            <div className="p-6">
+                                <p className="text-sm text-green-200/80 mb-4">
+                                    Ces articles ont été revendus ou transférés entre départements, prolongeant leur durée de vie et générant des revenus pour la production.
+                                </p>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="bg-cinema-900/50 p-6 rounded-lg border border-cinema-700">
+                                        <div className="text-sm text-slate-400 uppercase font-bold mb-2">Total Revenus Générés</div>
+                                        <div className="text-3xl font-bold text-green-400">
+                                            {buyBackItems.filter(i => i.status === 'SOLD').reduce((acc, i) => acc + i.price, 0)} €
+                                        </div>
+                                        <div className="text-sm text-slate-500 mt-1">
+                                            {buyBackItems.filter(i => i.status === 'SOLD').length} articles vendus
+                                        </div>
+                                    </div>
+
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left text-sm text-slate-400">
+                                            <thead className="border-b border-cinema-700">
+                                                <tr>
+                                                    <th className="pb-2">Article</th>
+                                                    <th className="pb-2">Vendeur</th>
+                                                    <th className="pb-2">Prix</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-cinema-700/50">
+                                                {buyBackItems
+                                                    .filter(i => i.status === 'SOLD')
+                                                    .map(item => (
+                                                        <tr key={item.id}>
+                                                            <td className="py-2 text-white">{item.name}</td>
+                                                            <td className="py-2">{item.sellerDepartment}</td>
+                                                            <td className="py-2 text-green-400 font-bold">{item.price} €</td>
+                                                        </tr>
+                                                    ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
