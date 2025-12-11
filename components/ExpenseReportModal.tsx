@@ -75,45 +75,48 @@ export const ExpenseReportModal: React.FC<ExpenseReportModalProps> = ({ isOpen, 
         setStep('ANALYZING'); // Reuse analyzing state for visual simplicity or create a new one
         setError(null);
 
-        try {
-            if (selectedFile.type.startsWith('image/')) {
-                try {
-                    fileToProcess = await compressImage(selectedFile);
-                } catch (e) {
-                    console.warn("Compression failed, using original", e);
+        // Small delay to allow browser to recover from camera switch (memory GC)
+        setTimeout(async () => {
+            try {
+                if (selectedFile.type.startsWith('image/')) {
+                    try {
+                        fileToProcess = await compressImage(selectedFile);
+                    } catch (e) {
+                        console.warn("Compression failed, using original", e);
+                    }
                 }
-            }
 
-            setFile(fileToProcess);
-            setPreviewUrl(URL.createObjectURL(fileToProcess));
+                setFile(fileToProcess);
+                setPreviewUrl(URL.createObjectURL(fileToProcess));
 
-            const result = await analyzeReceipt(fileToProcess);
-            if (result.data) {
-                setFormData(prev => ({
-                    ...prev,
-                    merchantName: result.data.merchantName || '',
-                    date: result.data.date || new Date().toISOString().split('T')[0],
-                    amountTTC: result.data.amountTTC || 0,
-                    amountTVA: result.data.amountTVA || 0,
-                    // Merge detected items with prefilled item if any
-                    items: [...(prev.items || []), ...(result.data.items || [])]
-                }));
+                const result = await analyzeReceipt(fileToProcess);
+                if (result.data) {
+                    setFormData(prev => ({
+                        ...prev,
+                        merchantName: result.data.merchantName || '',
+                        date: result.data.date || new Date().toISOString().split('T')[0],
+                        amountTTC: result.data.amountTTC || 0,
+                        amountTVA: result.data.amountTVA || 0,
+                        // Merge detected items with prefilled item if any
+                        items: [...(prev.items || []), ...(result.data.items || [])]
+                    }));
+                    setStep('REVIEW');
+                } else {
+                    // Use the raw response or a specific error message if available
+                    throw new Error(result.rawResponse || "Impossible d'analyser le ticket.");
+                }
+            } catch (err) {
+                console.error(err);
+                const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";
+
+                if (errorMessage.includes('429') || errorMessage.includes('Resource exhausted') || errorMessage.includes('quota')) {
+                    setError("Quota IA dépassé. Veuillez réessayer plus tard ou utiliser une autre clé API.");
+                } else {
+                    setError(`Erreur analyse: ${errorMessage}`);
+                }
                 setStep('REVIEW');
-            } else {
-                // Use the raw response or a specific error message if available
-                throw new Error(result.rawResponse || "Impossible d'analyser le ticket.");
             }
-        } catch (err) {
-            console.error(err);
-            const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";
-
-            if (errorMessage.includes('429') || errorMessage.includes('Resource exhausted') || errorMessage.includes('quota')) {
-                setError("Quota IA dépassé. Veuillez réessayer plus tard ou utiliser une autre clé API.");
-            } else {
-                setError(`Erreur analyse: ${errorMessage}`);
-            }
-            setStep('REVIEW');
-        }
+        }, 500);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
