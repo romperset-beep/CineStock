@@ -85,7 +85,8 @@ interface ProjectContextType {
   addBuyBackItem: (item: BuyBackItem) => void;
   toggleBuyBackReservation: (itemId: string, department: Department | 'PRODUCTION') => void;
   confirmBuyBackTransaction: (itemId: string) => Promise<void>;
-  deleteBuyBackItem: (itemId: string) => Promise<void>; // Added
+  deleteBuyBackItem: (itemId: string) => Promise<void>;
+  deleteExpenseReport: (reportId: string, receiptUrl?: string) => Promise<void>; // Added
   socialPosts: SocialPost[];
   addSocialPost: (post: SocialPost) => void;
   deleteSocialPost: (postId: string, photoUrl?: string) => Promise<void>; // Added
@@ -1045,6 +1046,39 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
+  const deleteExpenseReport = async (reportId: string, receiptUrl?: string) => {
+    try {
+      const projectId = project.id;
+      if (!projectId || projectId === 'default-project') return;
+
+      console.log(`[Expenses] Deleting report: ${reportId}`);
+
+      // 1. Delete Firestore Document
+      const reportRef = doc(db, 'projects', projectId, 'expenses', reportId);
+      await deleteDoc(reportRef);
+
+      // 2. Delete Receipt from Storage if exists
+      if (receiptUrl && receiptUrl.includes('firebase')) {
+        try {
+          const storage = getStorage();
+          const imageRef = ref(storage, receiptUrl);
+          await deleteObject(imageRef);
+          console.log("[Expenses] Receipt deleted from storage");
+        } catch (storageErr) {
+          console.warn("[Expenses] Failed to delete receipt from storage:", storageErr);
+        }
+      }
+
+      console.log("[Expenses] Report deleted successfully");
+      addNotification("Note de frais supprimée", "INFO", "PRODUCTION");
+
+    } catch (err: any) {
+      console.error("Error deleting expense report:", err);
+      setError(`Erreur suppression note de frais: ${err.message}`);
+      throw err;
+    }
+  };
+
   const userNotifications = notifications.filter(n => {
     if (!user) return false;
     if (user.department === 'PRODUCTION' || user.department === 'Régie') return true;
@@ -1264,6 +1298,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
       expenseReports,
       addExpenseReport,
       updateExpenseReportStatus,
+      deleteExpenseReport, // Added
       buyBackItems,
       addBuyBackItem,
       toggleBuyBackReservation,

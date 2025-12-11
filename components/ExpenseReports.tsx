@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { ExpenseReport, ExpenseStatus } from '../types';
-import { FileText, CheckCircle2, XCircle, Clock, Receipt, Users, User, PlusCircle, ChevronDown, ChevronUp, Download, FolderOpen } from 'lucide-react';
+import { FileText, CheckCircle2, XCircle, Clock, Receipt, Users, User, PlusCircle, ChevronDown, ChevronUp, Download, FolderOpen, Trash2 } from 'lucide-react';
 import { ExpenseReportModal } from './ExpenseReportModal';
 import { generateExpenseReportPDF, generateSummaryPDF } from '../services/pdfService';
 
 export const ExpenseReports: React.FC = () => {
-    const { expenseReports, updateExpenseReportStatus, user } = useProject();
+    const { expenseReports, updateExpenseReportStatus, deleteExpenseReport, user } = useProject();
     const [viewMode, setViewMode] = useState<'PERSONAL' | 'TEAM'>('PERSONAL');
     const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState<string | null>(null); // Quick View State
@@ -161,6 +161,22 @@ export const ExpenseReports: React.FC = () => {
                     >
                         <Download className="h-4 w-4" />
                     </button>
+
+                    {/* Delete Action (Cancel) */}
+                    {report.status === ExpenseStatus.PENDING && report.submittedBy === user?.name && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm("Voulez-vous vraiment supprimer cette note de frais ?")) {
+                                    deleteExpenseReport(report.id, report.receiptUrl);
+                                }
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-red-400 transition-colors"
+                            title="Supprimer la demande"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </button>
+                    )}
 
                     {/* Validate Actions */}
                     {showActions && isAdmin && report.status === ExpenseStatus.PENDING && (
