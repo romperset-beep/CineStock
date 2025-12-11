@@ -123,6 +123,18 @@ export const ExpenseReportModal: React.FC<ExpenseReportModalProps> = ({ isOpen, 
 
     if (!isOpen) return null;
 
+    // Helper for mobile/locale robust number parsing
+    const safeParseFloat = (val: any): number => {
+        if (typeof val === 'number') return val;
+        if (typeof val === 'string') {
+            // Replace comma with dot, remove currency symbols or spaces if any
+            const cleaned = val.replace(',', '.').replace(/[^0-9.-]/g, '');
+            const parsed = parseFloat(cleaned);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+        return 0;
+    };
+
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
         if (!selectedFile) return;
@@ -134,12 +146,10 @@ export const ExpenseReportModal: React.FC<ExpenseReportModalProps> = ({ isOpen, 
         setIsAnalyzing(true);
 
         // 2. Background Processing
-        // Small delay to allow browser main thread to render the UI switch
         setTimeout(async () => {
             try {
                 let fileToProcess = selectedFile;
 
-                // Compress if image
                 if (selectedFile.type.startsWith('image/')) {
                     try {
                         fileToProcess = await compressImage(selectedFile);
@@ -148,23 +158,20 @@ export const ExpenseReportModal: React.FC<ExpenseReportModalProps> = ({ isOpen, 
                     }
                 }
 
-                // Update file reference to the compressed one (valid for upload)
                 setFile(fileToProcess);
 
-                // SAFETY GUARD: If file is still > 1MB, skip AI to prevent crash
                 if (fileToProcess.size > 1024 * 1024) {
                     setIsAnalyzing(false);
                     setError("Image trop lourde pour l'IA, saisie manuelle requise.");
                     return;
                 }
 
-                // Analyze
                 const result = await analyzeReceipt(fileToProcess);
                 if (result.data) {
                     setFormData(prev => {
-                        let tva = result.data.amountTVA || prev.amountTVA || 0;
-                        let ttc = result.data.amountTTC || prev.amountTTC || 0;
-                        let ht = result.data.amountHT || prev.amountHT || 0;
+                        let tva = safeParseFloat(result.data.amountTVA) || prev.amountTVA || 0;
+                        let ttc = safeParseFloat(result.data.amountTTC) || prev.amountTTC || 0;
+                        let ht = safeParseFloat(result.data.amountHT) || prev.amountHT || 0;
 
                         // Auto-calculate missing values from AI if we have at least 2
                         if (ttc > 0 && tva > 0 && ht === 0) {
@@ -182,18 +189,14 @@ export const ExpenseReportModal: React.FC<ExpenseReportModalProps> = ({ isOpen, 
                             amountTTC: ttc,
                             amountTVA: tva,
                             amountHT: ht,
-                            // Merge detected items
                             items: [...(prev.items || []), ...(result.data.items || [])]
                         };
                     });
                 } else {
-                    // Silent failure or console log, user is already editing manually
                     console.warn("AI Analysis uncertain:", result.rawResponse);
                 }
             } catch (err) {
                 console.error("Background analysis failed:", err);
-                // We don't block the user with a big error, just maybe a toast or silent fail
-                // since they can manually edit.
                 const errorMessage = err instanceof Error ? err.message : "Erreur inconnue";
                 if (errorMessage.includes('429') || errorMessage.includes('Resource exhausted')) {
                     setError("IA surchargée, saisie manuelle requise.");

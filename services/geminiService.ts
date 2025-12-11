@@ -189,7 +189,7 @@ export const analyzeReceipt = async (file: File): Promise<{ data: any, rawRespon
 
     const prompt = `
       Analyze this receipt image.
-      Extract: merchantName, date, amountTTC, amountTVA, items (list).
+      Extract: merchantName, date, amountTTC, amountTVA, amountHT, items (list).
       Return ONLY JSON.
     `;
 
