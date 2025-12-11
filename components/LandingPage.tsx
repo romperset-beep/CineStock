@@ -155,7 +155,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                     <img
                         src="/logo.png"
                         alt="A Better Set Logo"
-                        className="h-12 w-auto object-contain"
+                        className="h-32 w-auto object-contain"
                     />
                 </div>
                 <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
