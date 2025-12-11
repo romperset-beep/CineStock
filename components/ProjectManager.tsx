@@ -86,7 +86,10 @@ export const ProjectManager: React.FC<ProjectManagerProps> = ({
                         <Receipt className="h-6 w-6 text-purple-400 group-hover:scale-110 transition-transform" />
                     </div>
                     <p className="text-4xl font-bold mt-2 text-purple-400">
-                        {expenseReports?.length || 0}
+                        {currentDept === 'PRODUCTION'
+                            ? (expenseReports?.length || 0)
+                            : (expenseReports?.filter(r => r.submittedBy === user?.name).length || 0)
+                        }
                     </p>
                     <p className="text-xs text-slate-400 mt-1">Justificatifs & Remboursements</p>
                 </button>
