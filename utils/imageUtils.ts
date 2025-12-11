@@ -13,55 +13,61 @@ export const compressImage = async (file: File, maxWidth = 1280, quality = 0.7):
     }
 
     return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = (event) => {
-            const img = new Image();
-            img.src = event.target?.result as string;
-            img.onload = () => {
-                const elem = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
+        const img = new Image();
+        // Use createObjectURL instead of FileReader to avoid reading the whole file into memory string
+        const objectUrl = URL.createObjectURL(file);
 
-                // Calculate new dimensions
-                if (width > height) {
-                    if (width > maxWidth) {
-                        height *= maxWidth / width;
-                        width = maxWidth;
-                    }
-                } else {
-                    if (height > maxWidth) {
-                        width *= maxWidth / height;
-                        height = maxWidth;
-                    }
+        img.onload = () => {
+            // Clean up memory
+            URL.revokeObjectURL(objectUrl);
+
+            const elem = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+
+            // Calculate new dimensions
+            if (width > height) {
+                if (width > maxWidth) {
+                    height *= maxWidth / width;
+                    width = maxWidth;
                 }
+            } else {
+                if (height > maxWidth) {
+                    width *= maxWidth / height;
+                    height = maxWidth;
+                }
+            }
 
-                elem.width = width;
-                elem.height = height;
+            elem.width = width;
+            elem.height = height;
 
-                const ctx = elem.getContext('2d');
-                if (!ctx) {
-                    resolve(file); // Fallback to original
+            const ctx = elem.getContext('2d');
+            if (!ctx) {
+                resolve(file); // Fallback
+                return;
+            }
+
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Convert to Blob and then File
+            ctx.canvas.toBlob((blob) => {
+                if (!blob) {
+                    resolve(file);
                     return;
                 }
-
-                ctx.drawImage(img, 0, 0, width, height);
-
-                // Convert to Blob and then File
-                ctx.canvas.toBlob((blob) => {
-                    if (!blob) {
-                        resolve(file);
-                        return;
-                    }
-                    const newFile = new File([blob], file.name, {
-                        type: 'image/jpeg',
-                        lastModified: Date.now(),
-                    });
-                    resolve(newFile);
-                }, 'image/jpeg', quality);
-            };
-            img.onerror = (err) => reject(err);
+                const newFile = new File([blob], file.name, {
+                    type: 'image/jpeg',
+                    lastModified: Date.now(),
+                });
+                resolve(newFile);
+            }, 'image/jpeg', quality);
         };
-        reader.onerror = (err) => reject(err);
+
+        img.onerror = (err) => {
+            URL.revokeObjectURL(objectUrl);
+            reject(err);
+        };
+
+        img.src = objectUrl;
     });
 };
