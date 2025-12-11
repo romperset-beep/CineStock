@@ -161,15 +161,31 @@ export const ExpenseReportModal: React.FC<ExpenseReportModalProps> = ({ isOpen, 
                 // Analyze
                 const result = await analyzeReceipt(fileToProcess);
                 if (result.data) {
-                    setFormData(prev => ({
-                        ...prev,
-                        merchantName: result.data.merchantName || prev.merchantName,
-                        date: result.data.date || prev.date,
-                        amountTTC: result.data.amountTTC || prev.amountTTC,
-                        amountTVA: result.data.amountTVA || prev.amountTVA,
-                        // Merge detected items
-                        items: [...(prev.items || []), ...(result.data.items || [])]
-                    }));
+                    setFormData(prev => {
+                        let tva = result.data.amountTVA || prev.amountTVA || 0;
+                        let ttc = result.data.amountTTC || prev.amountTTC || 0;
+                        let ht = result.data.amountHT || prev.amountHT || 0;
+
+                        // Auto-calculate missing values from AI if we have at least 2
+                        if (ttc > 0 && tva > 0 && ht === 0) {
+                            ht = Number((ttc - tva).toFixed(2));
+                        } else if (ttc > 0 && ht > 0 && tva === 0) {
+                            tva = Number((ttc - ht).toFixed(2));
+                        } else if (ht > 0 && tva > 0 && ttc === 0) {
+                            ttc = Number((ht + tva).toFixed(2));
+                        }
+
+                        return {
+                            ...prev,
+                            merchantName: result.data.merchantName || prev.merchantName,
+                            date: result.data.date || prev.date,
+                            amountTTC: ttc,
+                            amountTVA: tva,
+                            amountHT: ht,
+                            // Merge detected items
+                            items: [...(prev.items || []), ...(result.data.items || [])]
+                        };
+                    });
                 } else {
                     // Silent failure or console log, user is already editing manually
                     console.warn("AI Analysis uncertain:", result.rawResponse);
