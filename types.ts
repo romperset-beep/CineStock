@@ -69,6 +69,7 @@ export interface Project {
   carbonContext?: CarbonContext;
   cateringLogs?: CateringLog[];
   cateringValidations?: Record<string, boolean>; // date -> isValidated
+  timeLogs?: TimeLog[];
 }
 
 export interface CateringLog {
@@ -80,6 +81,19 @@ export interface CateringLog {
   hasEaten: boolean;
   isVegetarian: boolean;
   isManual: boolean;
+}
+
+export interface TimeLog {
+  id: string; // date_userId
+  userId: string;
+  userName: string;
+  department: Department | 'PRODUCTION';
+  date: string; // YYYY-MM-DD
+  callTime: string; // HH:mm
+  mealTime: string; // HH:mm (Start of meal)
+  hasShortenedMeal: boolean; // If true, deduct 30m instead of 1h
+  endTime: string; // HH:mm
+  totalHours: number; // Calculated hours
 }
 
 export interface CarbonContext {
