@@ -165,6 +165,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [socialTargetUserId, setSocialTargetUserId] = useState<string>('');
 
 
+  const [error, setError] = useState<string | null>(null);
+  const [debugStatus, setDebugStatus] = useState<string>("");
+  const [lastLog, setLastLog] = useState<string>("En attente...");
+
 
   const resetPassword = async (email: string) => {
     try {
